@@ -3,7 +3,9 @@
     <!-- Sidebar -->
     <aside class="hidden lg:flex w-64 bg-card border-r border-border flex-col">
       <div class="p-6 border-b border-border">
-        <h1 class="text-h4 font-bold text-primary">EventHub</h1>
+        <h1 class="text-h4 font-bold text-primary">
+          EventHub
+        </h1>
       </div>
       <nav class="flex-1 overflow-y-auto p-4 space-y-2">
         <slot name="nav" />
@@ -25,13 +27,15 @@
             <span class="text-xl">☰</span>
           </button>
           <h2 class="text-h4 hidden sm:block">
-            <slot name="title">Welcome</slot>
+            <slot name="title">
+              Welcome
+            </slot>
           </h2>
         </div>
         <div class="flex items-center gap-3">
           <button class="p-2 hover:bg-muted rounded-lg relative">
             <span class="text-xl">🔔</span>
-            <span class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></span>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
           </button>
           <button class="p-2 hover:bg-muted rounded-lg">
             <span class="text-xl">⚙️</span>

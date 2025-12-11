@@ -3,39 +3,79 @@
     <!-- Search and Filters -->
     <div class="card">
       <div class="flex flex-col gap-4">
-        <input type="text" v-model="searchQuery" placeholder="Search events..." class="input-field w-full" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search events..."
+          class="input-field w-full"
+        >
         
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <label class="text-sm font-medium mb-2 block">Category</label>
-            <select v-model="selectedCategory" class="input-field w-full">
-              <option value="">All Categories</option>
-              <option value="music">Music</option>
-              <option value="sports">Sports</option>
-              <option value="tech">Tech</option>
-              <option value="business">Business</option>
+            <select
+              v-model="selectedCategory"
+              class="input-field w-full"
+            >
+              <option value="">
+                All Categories
+              </option>
+              <option value="music">
+                Music
+              </option>
+              <option value="sports">
+                Sports
+              </option>
+              <option value="tech">
+                Tech
+              </option>
+              <option value="business">
+                Business
+              </option>
             </select>
           </div>
 
           <div>
             <label class="text-sm font-medium mb-2 block">Price Range</label>
-            <select v-model="selectedPrice" class="input-field w-full">
-              <option value="">Any Price</option>
-              <option value="free">Free</option>
-              <option value="0-50">Under $50</option>
-              <option value="50-100">$50 - $100</option>
-              <option value="100+">$100+</option>
+            <select
+              v-model="selectedPrice"
+              class="input-field w-full"
+            >
+              <option value="">
+                Any Price
+              </option>
+              <option value="free">
+                Free
+              </option>
+              <option value="0-50">
+                Under $50
+              </option>
+              <option value="50-100">
+                $50 - $100
+              </option>
+              <option value="100+">
+                $100+
+              </option>
             </select>
           </div>
 
           <div>
             <label class="text-sm font-medium mb-2 block">Date</label>
-            <input v-model="selectedDate" type="date" class="input-field w-full" />
+            <input
+              v-model="selectedDate"
+              type="date"
+              class="input-field w-full"
+            >
           </div>
 
           <div>
             <label class="text-sm font-medium mb-2 block">Location</label>
-            <input v-model="selectedLocation" type="text" placeholder="City or venue" class="input-field w-full" />
+            <input
+              v-model="selectedLocation"
+              type="text"
+              placeholder="City or venue"
+              class="input-field w-full"
+            >
           </div>
         </div>
       </div>
@@ -43,9 +83,15 @@
 
     <!-- Results -->
     <div>
-      <p class="text-sm text-muted-foreground mb-4">Showing {{ filteredEvents.length }} events</p>
+      <p class="text-sm text-muted-foreground mb-4">
+        Showing {{ filteredEvents.length }} events
+      </p>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <event-card v-for="event in filteredEvents" :key="event.id" v-bind="event" />
+        <event-card
+          v-for="event in filteredEvents"
+          :key="event.id"
+          v-bind="event"
+        />
       </div>
     </div>
   </div>

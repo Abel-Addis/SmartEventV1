@@ -1,10 +1,3 @@
-<template>
-  <router-link :to="to" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" :class="{ 'bg-primary/10 text-primary': isActive }">
-    <span class="text-lg">{{ icon }}</span>
-    <span class="text-sm font-medium">{{ label }}</span>
-  </router-link>
-</template>
-
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -24,3 +17,15 @@ const isActive = computed(() => {
   return route.path.startsWith(props.to)
 })
 </script>
+
+<template>
+  <router-link :to="to"
+    class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200" :class="[
+      isActive
+        ? 'bg-sidebar-accent text-primary-foreground shadow-sm'
+        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+    ]">
+    <span class="text-lg shrink-0">{{ icon }}</span>
+    <span class="flex-1">{{ label }}</span>
+  </router-link>
+</template>

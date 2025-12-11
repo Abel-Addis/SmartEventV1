@@ -2,22 +2,48 @@
   <div class="space-y-6">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-h2 font-bold mb-2">Notifications</h1>
-        <p class="text-muted-foreground">{{ unreadCount }} unread</p>
+        <h1 class="text-h2 font-bold mb-2">
+          Notifications
+        </h1>
+        <p class="text-muted-foreground">
+          {{ unreadCount }} unread
+        </p>
       </div>
-      <button @click="markAllRead" class="btn-outline px-6 py-2" v-if="unreadCount > 0">Mark All as Read</button>
+      <button
+        v-if="unreadCount > 0"
+        class="btn-outline px-6 py-2"
+        @click="markAllRead"
+      >
+        Mark All as Read
+      </button>
     </div>
 
     <div class="space-y-2">
-      <div v-for="notification in notifications" :key="notification.id" :class="['p-4 border rounded-lg transition-colors cursor-pointer hover:bg-muted', !notification.read ? 'border-primary bg-primary/5' : 'border-border']" @click="toggleRead(notification.id)">
+      <div
+        v-for="notification in notifications"
+        :key="notification.id"
+        :class="['p-4 border rounded-lg transition-colors cursor-pointer hover:bg-muted', !notification.read ? 'border-primary bg-primary/5' : 'border-border']"
+        @click="toggleRead(notification.id)"
+      >
         <div class="flex items-start gap-4">
-          <div class="text-2xl">{{ notification.icon }}</div>
-          <div class="flex-1">
-            <p class="font-semibold">{{ notification.title }}</p>
-            <p class="text-muted-foreground text-sm mt-1">{{ notification.message }}</p>
-            <p class="text-xs text-muted-foreground mt-2">{{ notification.timestamp }}</p>
+          <div class="text-2xl">
+            {{ notification.icon }}
           </div>
-          <div v-if="!notification.read" class="flex-shrink-0 w-2 h-2 bg-primary rounded-full"></div>
+          <div class="flex-1">
+            <p class="font-semibold">
+              {{ notification.title }}
+            </p>
+            <p class="text-muted-foreground text-sm mt-1">
+              {{ notification.message }}
+            </p>
+            <p class="text-xs text-muted-foreground mt-2">
+              {{ notification.timestamp }}
+            </p>
+          </div>
+          <div
+            v-if="!notification.read"
+            class="flex-shrink-0 w-2 h-2 bg-primary rounded-full"
+          />
         </div>
       </div>
     </div>

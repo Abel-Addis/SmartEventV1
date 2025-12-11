@@ -3,53 +3,117 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-h2 font-bold">Category Management</h2>
-        <p class="text-muted-foreground">Manage event categories</p>
+        <h2 class="text-h2 font-bold">
+          Category Management
+        </h2>
+        <p class="text-muted-foreground">
+          Manage event categories
+        </p>
       </div>
-      <button @click="showAddCategory = true" class="btn-primary px-6 py-2">Add Category</button>
+      <button
+        class="btn-primary px-6 py-2"
+        @click="showAddCategory = true"
+      >
+        Add Category
+      </button>
     </div>
 
     <!-- Categories Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div v-for="category in categories" :key="category.id" class="card hover:shadow-lg transition-shadow">
+      <div
+        v-for="category in categories"
+        :key="category.id"
+        class="card hover:shadow-lg transition-shadow"
+      >
         <div class="flex items-start justify-between mb-3">
           <div>
-            <h4 class="text-h4 font-bold">{{ category.name }}</h4>
-            <p class="text-muted-foreground text-sm">{{ category.events }} events</p>
+            <h4 class="text-h4 font-bold">
+              {{ category.name }}
+            </h4>
+            <p class="text-muted-foreground text-sm">
+              {{ category.events }} events
+            </p>
           </div>
           <span class="text-2xl">{{ category.icon }}</span>
         </div>
-        <p class="text-sm text-muted-foreground mb-4">{{ category.description }}</p>
+        <p class="text-sm text-muted-foreground mb-4">
+          {{ category.description }}
+        </p>
         <div class="flex gap-2">
-          <button @click="editCategory(category.id)" class="btn-outline px-3 py-1 text-sm flex-1">Edit</button>
-          <button @click="deleteCategory(category.id)" class="btn-outline px-3 py-1 text-sm flex-1 hover:bg-red-100 text-red-600">Delete</button>
+          <button
+            class="btn-outline px-3 py-1 text-sm flex-1"
+            @click="editCategory(category.id)"
+          >
+            Edit
+          </button>
+          <button
+            class="btn-outline px-3 py-1 text-sm flex-1 hover:bg-muted text-foreground"
+            @click="deleteCategory(category.id)"
+          >
+            Delete
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Add/Edit Category Modal -->
-    <div v-if="showAddCategory" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div
+      v-if="showAddCategory"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    >
       <div class="card max-w-md w-full">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-h3 font-bold">{{ editingId ? 'Edit' : 'Add' }} Category</h3>
-          <button @click="showAddCategory = false" class="text-2xl">✕</button>
+          <h3 class="text-h3 font-bold">
+            {{ editingId ? 'Edit' : 'Add' }} Category
+          </h3>
+          <button
+            class="text-2xl"
+            @click="showAddCategory = false"
+          >
+            ✕
+          </button>
         </div>
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium mb-2">Category Name</label>
-            <input v-model="newCategory.name" type="text" placeholder="e.g., Music" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background">
+            <input
+              v-model="newCategory.name"
+              type="text"
+              placeholder="e.g., Music"
+              class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            >
           </div>
           <div>
             <label class="block text-sm font-medium mb-2">Icon</label>
-            <input v-model="newCategory.icon" type="text" placeholder="e.g., 🎵" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background">
+            <input
+              v-model="newCategory.icon"
+              type="text"
+              placeholder="e.g., 🎵"
+              class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            >
           </div>
           <div>
             <label class="block text-sm font-medium mb-2">Description</label>
-            <textarea v-model="newCategory.description" placeholder="Category description..." rows="3" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"></textarea>
+            <textarea
+              v-model="newCategory.description"
+              placeholder="Category description..."
+              rows="3"
+              class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            />
           </div>
           <div class="flex gap-2">
-            <button @click="saveCategory" class="btn-primary flex-1">{{ editingId ? 'Update' : 'Add' }}</button>
-            <button @click="showAddCategory = false" class="btn-outline flex-1">Cancel</button>
+            <button
+              class="btn-primary flex-1"
+              @click="saveCategory"
+            >
+              {{ editingId ? 'Update' : 'Add' }}
+            </button>
+            <button
+              class="btn-outline flex-1"
+              @click="showAddCategory = false"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>

@@ -1,35 +1,76 @@
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-h2 font-bold mb-2">Finance</h1>
-      <p class="text-muted-foreground">Track revenue and payouts</p>
+      <h1 class="text-h2 font-bold mb-2">
+        Finance
+      </h1>
+      <p class="text-muted-foreground">
+        Track revenue and payouts
+      </p>
     </div>
 
     <!-- Financial Overview -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <stat-card label="Total Revenue" value="$93,750" icon="💰" trend="42" />
-      <stat-card label="Platform Fee (10%)" value="$9,375" icon="📋" trend="0" />
-      <stat-card label="Available Balance" value="$84,375" icon="💳" trend="42" />
-      <stat-card label="Total Payouts" value="$50,000" icon="✓" trend="15" />
+      <stat-card
+        label="Total Revenue"
+        value="$93,750"
+        icon="💰"
+        trend="42"
+      />
+      <stat-card
+        label="Platform Fee (10%)"
+        value="$9,375"
+        icon="📋"
+        trend="0"
+      />
+      <stat-card
+        label="Available Balance"
+        value="$84,375"
+        icon="💳"
+        trend="42"
+      />
+      <stat-card
+        label="Total Payouts"
+        value="$50,000"
+        icon="✓"
+        trend="15"
+      />
     </div>
 
     <!-- Revenue by Event -->
     <div class="card">
-      <h3 class="text-h3 font-bold mb-6">Revenue by Event</h3>
+      <h3 class="text-h3 font-bold mb-6">
+        Revenue by Event
+      </h3>
       <div class="space-y-4">
-        <div v-for="event in events" :key="event.id" class="pb-4 border-b border-border last:border-0 last:pb-0">
+        <div
+          v-for="event in events"
+          :key="event.id"
+          class="pb-4 border-b border-border last:border-0 last:pb-0"
+        >
           <div class="flex justify-between items-start mb-2">
             <div>
-              <p class="font-semibold">{{ event.title }}</p>
-              <p class="text-sm text-muted-foreground">{{ event.registrations }} registrations</p>
+              <p class="font-semibold">
+                {{ event.title }}
+              </p>
+              <p class="text-sm text-muted-foreground">
+                {{ event.registrations }} registrations
+              </p>
             </div>
             <div class="text-right">
-              <p class="font-bold text-primary">{{ event.revenue }}</p>
-              <p class="text-sm text-muted-foreground">{{ event.margin }} margin</p>
+              <p class="font-bold text-primary">
+                {{ event.revenue }}
+              </p>
+              <p class="text-sm text-muted-foreground">
+                {{ event.margin }} margin
+              </p>
             </div>
           </div>
           <div class="h-2 bg-muted rounded-full overflow-hidden">
-            <div class="h-full bg-primary" :style="{ width: `${(event.registrations / 1250) * 100}%` }"></div>
+            <div
+              class="h-full bg-primary"
+              :style="{ width: `${(event.registrations / 1250) * 100}%` }"
+            />
           </div>
         </div>
       </div>
@@ -37,26 +78,47 @@
 
     <!-- Transactions -->
     <div class="card">
-      <h3 class="text-h3 font-bold mb-6">Recent Transactions</h3>
+      <h3 class="text-h3 font-bold mb-6">
+        Recent Transactions
+      </h3>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-muted border-b border-border">
             <tr>
-              <th class="px-4 py-3 text-left font-semibold">Date</th>
-              <th class="px-4 py-3 text-left font-semibold">Description</th>
-              <th class="px-4 py-3 text-left font-semibold">Amount</th>
-              <th class="px-4 py-3 text-left font-semibold">Status</th>
+              <th class="px-4 py-3 text-left font-semibold">
+                Date
+              </th>
+              <th class="px-4 py-3 text-left font-semibold">
+                Description
+              </th>
+              <th class="px-4 py-3 text-left font-semibold">
+                Amount
+              </th>
+              <th class="px-4 py-3 text-left font-semibold">
+                Status
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="tx in transactions" :key="tx.id" class="border-b border-border hover:bg-muted/50">
-              <td class="px-4 py-3">{{ tx.date }}</td>
-              <td class="px-4 py-3">{{ tx.description }}</td>
-              <td class="px-4 py-3 font-bold" :class="tx.type === 'credit' ? 'text-green-600' : 'text-muted-foreground'">
+            <tr
+              v-for="tx in transactions"
+              :key="tx.id"
+              class="border-b border-border hover:bg-muted/50"
+            >
+              <td class="px-4 py-3">
+                {{ tx.date }}
+              </td>
+              <td class="px-4 py-3">
+                {{ tx.description }}
+              </td>
+              <td
+                class="px-4 py-3 font-bold"
+                :class="tx.type === 'credit' ? 'text-foreground' : 'text-muted-foreground'"
+              >
                 {{ tx.type === 'credit' ? '+' : '-' }}{{ tx.amount }}
               </td>
               <td class="px-4 py-3">
-                <span :class="['px-2 py-1 rounded text-xs font-medium', tx.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400']">
+                <span :class="['px-2 py-1 rounded text-xs font-medium', tx.status === 'completed' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground']">
                   {{ tx.status }}
                 </span>
               </td>
@@ -68,7 +130,9 @@
 
     <!-- Payout Settings -->
     <div class="card">
-      <h3 class="text-h3 font-bold mb-4">Payout Settings</h3>
+      <h3 class="text-h3 font-bold mb-4">
+        Payout Settings
+      </h3>
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium mb-2">Payment Method</label>
@@ -77,7 +141,9 @@
             <option>Mobile Money</option>
           </select>
         </div>
-        <button class="btn-primary py-3 px-6">Request Payout</button>
+        <button class="btn-primary py-3 px-6">
+          Request Payout
+        </button>
       </div>
     </div>
   </div>

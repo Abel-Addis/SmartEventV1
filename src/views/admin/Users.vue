@@ -3,8 +3,12 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-h2 font-bold">User Management</h2>
-        <p class="text-muted-foreground">Manage all platform users</p>
+        <h2 class="text-h2 font-bold">
+          User Management
+        </h2>
+        <p class="text-muted-foreground">
+          Manage all platform users
+        </p>
       </div>
     </div>
 
@@ -13,23 +17,48 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2">Search Users</label>
-          <input v-model="searchQuery" type="text" placeholder="Name, email..." class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Name, email..."
+            class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+          >
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Status</label>
-          <select v-model="filterStatus" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background">
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-            <option value="inactive">Inactive</option>
+          <select
+            v-model="filterStatus"
+            class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+          >
+            <option value="">
+              All Status
+            </option>
+            <option value="active">
+              Active
+            </option>
+            <option value="suspended">
+              Suspended
+            </option>
+            <option value="inactive">
+              Inactive
+            </option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Join Date</label>
-          <input v-model="filterDate" type="date" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background">
+          <input
+            v-model="filterDate"
+            type="date"
+            class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+          >
         </div>
         <div class="flex items-end">
-          <button @click="applyFilters" class="w-full btn-primary">Apply Filters</button>
+          <button
+            class="w-full btn-primary"
+            @click="applyFilters"
+          >
+            Apply Filters
+          </button>
         </div>
       </div>
     </div>
@@ -39,28 +68,56 @@
       <table class="w-full">
         <thead class="border-b border-border bg-muted">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold">User</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Email</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Join Date</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Status</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Actions</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">
+              User
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">
+              Email
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">
+              Join Date
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">
+              Status
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id" class="border-b border-border hover:bg-muted/50 transition-colors">
-            <td class="px-4 py-3 font-medium">{{ user.name }}</td>
-            <td class="px-4 py-3 text-muted-foreground">{{ user.email }}</td>
-            <td class="px-4 py-3 text-muted-foreground">{{ user.joinDate }}</td>
+          <tr
+            v-for="user in filteredUsers"
+            :key="user.id"
+            class="border-b border-border hover:bg-muted/50 transition-colors"
+          >
+            <td class="px-4 py-3 font-medium">
+              {{ user.name }}
+            </td>
+            <td class="px-4 py-3 text-muted-foreground">
+              {{ user.email }}
+            </td>
+            <td class="px-4 py-3 text-muted-foreground">
+              {{ user.joinDate }}
+            </td>
             <td class="px-4 py-3">
-              <span :class="['px-3 py-1 rounded-full text-sm font-medium', user.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
+              <span :class="['px-3 py-1 rounded-full text-sm font-medium', user.status === 'active' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground']">
                 {{ user.status }}
               </span>
             </td>
             <td class="px-4 py-3 flex gap-2">
-              <button @click="toggleUserStatus(user.id)" :class="['px-3 py-1 text-sm rounded-lg transition-colors', user.status === 'active' ? 'btn-outline hover:bg-red-100 text-red-600' : 'btn-outline hover:bg-green-100 text-green-600']">
+              <button
+                :class="['px-3 py-1 text-sm rounded-lg transition-colors', user.status === 'active' ? 'btn-outline hover:bg-muted text-foreground' : 'btn-outline hover:bg-muted text-foreground']"
+                @click="toggleUserStatus(user.id)"
+              >
                 {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
               </button>
-              <button @click="viewUserDetails(user.id)" class="btn-outline px-3 py-1 text-sm">View</button>
+              <button
+                class="btn-outline px-3 py-1 text-sm"
+                @click="viewUserDetails(user.id)"
+              >
+                View
+              </button>
             </td>
           </tr>
         </tbody>

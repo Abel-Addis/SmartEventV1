@@ -1,49 +1,103 @@
 <template>
-  <div class="flex min-h-screen bg-background">
-    <!-- Mobile Sidebar Toggle -->
-    <div v-if="mobileMenuOpen" class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="mobileMenuOpen = false"></div>
+  <div class="flex min-h-screen bg-background text-foreground">
+    <div v-if="mobileMenuOpen" class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="mobileMenuOpen = false" />
 
     <!-- Sidebar -->
-    <aside :class="['fixed lg:relative w-64 h-screen bg-card border-r border-border flex flex-col transition-all z-40', !mobileMenuOpen && '-translate-x-full lg:translate-x-0']">
-      <div class="p-6 border-b border-border">
-        <router-link to="/" class="text-h4 font-bold text-primary hover:opacity-80">EventHub Admin</router-link>
+    <aside :class="[
+      'fixed lg:sticky top-0 h-screen w-64 flex flex-col transition-transform duration-200 z-50 bg-sidebar border-r border-sidebar-border',
+      !mobileMenuOpen && '-translate-x-full lg:translate-x-0'
+    ]">
+      <!-- Brand -->
+      <div class="h-16 px-5 border-b border-sidebar-border flex items-center justify-between">
+        <router-link to="/" class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+            V
+          </div>
+          <div class="leading-tight">
+            <p class="text-sm font-semibold text-sidebar-foreground">Vo</p>
+            <p class="text-xs text-muted-foreground">Admin</p>
+          </div>
+        </router-link>
+        <button class="lg:hidden text-lg text-muted-foreground" @click="mobileMenuOpen = false">✕</button>
       </div>
-      <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-        <nav-item to="/admin/dashboard" icon="📊">Dashboard</nav-item>
-        <nav-item to="/admin/users" icon="👥">Users</nav-item>
-        <nav-item to="/admin/organizers" icon="🏢">Organizers</nav-item>
-        <nav-item to="/admin/events" icon="🎪">Events</nav-item>
-        <nav-item to="/admin/categories" icon="📂">Categories</nav-item>
-        <nav-item to="/admin/reports" icon="📄">Reports</nav-item>
+
+      <!-- Navigation -->
+      <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+        <nav-item to="/admin/" icon="📊" label="Dashboard" />
+        <nav-item to="/admin/users" icon="👥" label="Users" />
+        <nav-item to="/admin/organizers" icon="🏢" label="Organizers" />
+        <nav-item to="/admin/events" icon="🎪" label="Events" />
+        <nav-item to="/admin/categories" icon="📂" label="Categories" />
+        <nav-item to="/admin/reports" icon="📄" label="Reports" />
       </nav>
+
+      <!-- Profile -->
+      <div class="p-4 border-t border-sidebar-border">
+        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer">
+          <div
+            class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-sm font-semibold text-foreground">
+            A
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium truncate text-sidebar-foreground">Admin</div>
+            <div class="text-xs text-muted-foreground truncate">admin@vo.com</div>
+          </div>
+          <span class="text-muted-foreground">⋯</span>
+        </div>
+      </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col w-full">
-      <!-- Top Header -->
-      <header class="border-b border-border bg-card px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-30">
-        <div class="flex items-center gap-4">
-          <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 hover:bg-muted rounded-lg">
-            <span class="text-xl">☰</span>
-          </button>
-          <h2 class="text-h4 hidden sm:block">
-            <slot name="title">Admin Dashboard</slot>
-          </h2>
-        </div>
-        <div class="flex items-center gap-3">
-          <router-link to="/admin/notifications" class="p-2 hover:bg-muted rounded-lg relative">
-            <span class="text-xl">🔔</span>
-            <span class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></span>
-          </router-link>
-          <router-link to="/admin/settings" class="p-2 hover:bg-muted rounded-lg">
-            <span class="text-xl">⚙️</span>
-          </router-link>
+      <!-- Header -->
+      <header class="sticky top-0 z-30 bg-background border-b border-border">
+        <div class="h-16 px-4 sm:px-6 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="lg:hidden p-2 rounded-lg border border-border bg-card hover:bg-accent transition"
+              @click="mobileMenuOpen = !mobileMenuOpen">
+              <span class="text-lg">☰</span>
+            </button>
+
+            <div>
+              <p class="text-xs uppercase tracking-wider text-muted-foreground">Admin</p>
+              <h2 class="text-base sm:text-lg font-semibold">
+                <slot name="title">Dashboard</slot>
+              </h2>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="relative hidden sm:block">
+              <input type="text" placeholder="Quick search" class="input-field w-56 pl-9 pr-3">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">⌕</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <ThemeToggle />
+              <router-link to="/admin/notifications"
+                class="relative p-2 rounded-lg border border-border bg-card hover:bg-accent transition">
+                <span class="text-lg">🔔</span>
+                <span class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              </router-link>
+              <router-link to="/admin/settings"
+                class="p-2 rounded-lg border border-border bg-card hover:bg-accent transition">
+                <span class="text-lg">⚙️</span>
+              </router-link>
+            </div>
+          </div>
         </div>
       </header>
 
       <!-- Page Content -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        <router-view />
+      <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <router-view v-slot="{ Component }">
+          <transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 translate-y-2"
+            enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-150"
+            leave-from-class="opacity-100" leave-to-class="opacity-0" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </div>
     </main>
   </div>
@@ -52,6 +106,7 @@
 <script setup>
 import { ref } from 'vue'
 import NavItem from '@/components/NavItem.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const mobileMenuOpen = ref(false)
 </script>

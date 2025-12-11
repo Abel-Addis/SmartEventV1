@@ -3,27 +3,56 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-h2 font-bold">Organizer Management</h2>
-        <p class="text-muted-foreground">Manage and approve event organizers</p>
+        <h2 class="text-h2 font-bold">
+          Organizer Management
+        </h2>
+        <p class="text-muted-foreground">
+          Manage and approve event organizers
+        </p>
       </div>
     </div>
 
     <!-- Pending Approvals -->
-    <div v-if="pendingOrganizers.length > 0" class="card bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/20">
+    <div
+      v-if="pendingOrganizers.length > 0"
+      class="card bg-muted border border-border"
+    >
       <div class="flex items-start gap-3">
         <span class="text-2xl">⚠️</span>
         <div class="flex-1">
-          <h3 class="font-semibold mb-2">Pending Approvals</h3>
-          <p class="text-sm text-muted-foreground mb-4">{{ pendingOrganizers.length }} organizers awaiting approval</p>
+          <h3 class="font-semibold mb-2">
+            Pending Approvals
+          </h3>
+          <p class="text-sm text-muted-foreground mb-4">
+            {{ pendingOrganizers.length }} organizers awaiting approval
+          </p>
           <div class="space-y-2">
-            <div v-for="org in pendingOrganizers" :key="org.id" class="flex items-center justify-between p-3 bg-white dark:bg-card rounded-lg">
+            <div
+              v-for="org in pendingOrganizers"
+              :key="org.id"
+              class="flex items-center justify-between p-3 bg-white dark:bg-card rounded-lg"
+            >
               <div>
-                <p class="font-medium">{{ org.name }}</p>
-                <p class="text-sm text-muted-foreground">{{ org.email }}</p>
+                <p class="font-medium">
+                  {{ org.name }}
+                </p>
+                <p class="text-sm text-muted-foreground">
+                  {{ org.email }}
+                </p>
               </div>
               <div class="flex gap-2">
-                <button @click="approveOrganizer(org.id)" class="btn-primary px-3 py-1 text-sm">Approve</button>
-                <button @click="rejectOrganizer(org.id)" class="btn-outline px-3 py-1 text-sm">Reject</button>
+                <button
+                  class="btn-primary px-3 py-1 text-sm"
+                  @click="approveOrganizer(org.id)"
+                >
+                  Approve
+                </button>
+                <button
+                  class="btn-outline px-3 py-1 text-sm"
+                  @click="rejectOrganizer(org.id)"
+                >
+                  Reject
+                </button>
               </div>
             </div>
           </div>
@@ -33,20 +62,42 @@
 
     <!-- Approved Organizers -->
     <div class="card">
-      <h3 class="text-h3 font-bold mb-6">Approved Organizers</h3>
+      <h3 class="text-h3 font-bold mb-6">
+        Approved Organizers
+      </h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="org in approvedOrganizers" :key="org.id" class="card hover:shadow-lg transition-shadow">
+        <div
+          v-for="org in approvedOrganizers"
+          :key="org.id"
+          class="card hover:shadow-lg transition-shadow"
+        >
           <div class="flex items-start justify-between mb-4">
             <div>
-              <h4 class="font-semibold">{{ org.name }}</h4>
-              <p class="text-sm text-muted-foreground">{{ org.events }} events</p>
+              <h4 class="font-semibold">
+                {{ org.name }}
+              </h4>
+              <p class="text-sm text-muted-foreground">
+                {{ org.events }} events
+              </p>
             </div>
             <span class="text-2xl">🏢</span>
           </div>
-          <p class="text-sm text-muted-foreground mb-3">{{ org.email }}</p>
+          <p class="text-sm text-muted-foreground mb-3">
+            {{ org.email }}
+          </p>
           <div class="flex gap-2">
-            <button @click="viewOrganizer(org.id)" class="btn-outline px-3 py-1 text-sm flex-1">View</button>
-            <button @click="suspendOrganizer(org.id)" class="btn-outline px-3 py-1 text-sm flex-1 hover:bg-red-100 text-red-600">Suspend</button>
+            <button
+              class="btn-outline px-3 py-1 text-sm flex-1"
+              @click="viewOrganizer(org.id)"
+            >
+              View
+            </button>
+            <button
+              class="btn-outline px-3 py-1 text-sm flex-1 hover:bg-muted text-foreground"
+              @click="suspendOrganizer(org.id)"
+            >
+              Suspend
+            </button>
           </div>
         </div>
       </div>

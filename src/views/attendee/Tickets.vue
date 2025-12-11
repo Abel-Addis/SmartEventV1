@@ -1,37 +1,75 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-h2 font-bold mb-2">My Tickets</h1>
-      <p class="text-muted-foreground">{{ tickets.length }} active tickets</p>
+      <h1 class="text-h2 font-bold mb-2">
+        My Tickets
+      </h1>
+      <p class="text-muted-foreground">
+        {{ tickets.length }} active tickets
+      </p>
     </div>
 
     <div class="space-y-4">
-      <div v-for="ticket in tickets" :key="ticket.id" class="card hover:shadow-lg transition-shadow">
+      <div
+        v-for="ticket in tickets"
+        :key="ticket.id"
+        class="card hover:shadow-lg transition-shadow"
+      >
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="flex-1">
-            <h3 class="text-h4 font-bold">{{ ticket.eventTitle }}</h3>
-            <p class="text-muted-foreground text-sm mb-3">{{ ticket.date }} at {{ ticket.time }}</p>
+            <h3 class="text-h4 font-bold">
+              {{ ticket.eventTitle }}
+            </h3>
+            <p class="text-muted-foreground text-sm mb-3">
+              {{ ticket.date }} at {{ ticket.time }}
+            </p>
             <div class="flex flex-wrap gap-3">
               <span class="badge">Ticket #{{ ticket.ticketNo }}</span>
-              <span :class="['badge', ticket.status === 'used' ? 'bg-muted' : ticket.status === 'upcoming' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400']">{{ ticket.status }}</span>
+              <span :class="['badge', ticket.status === 'used' ? 'bg-muted text-muted-foreground' : ticket.status === 'upcoming' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground']">{{ ticket.status }}</span>
             </div>
           </div>
 
           <div class="flex flex-col gap-2 sm:text-right">
-            <p class="text-sm text-muted-foreground">Order #{{ ticket.orderId }}</p>
-            <button v-if="ticket.status !== 'used'" @click="showQR(ticket)" class="btn-primary py-2 px-4 text-sm">Show QR Code</button>
-            <router-link v-else to="/dashboard" class="btn-outline py-2 px-4 text-sm text-center">View Details</router-link>
+            <p class="text-sm text-muted-foreground">
+              Order #{{ ticket.orderId }}
+            </p>
+            <button
+              v-if="ticket.status !== 'used'"
+              class="btn-primary py-2 px-4 text-sm"
+              @click="showQR(ticket)"
+            >
+              Show QR Code
+            </button>
+            <router-link
+              v-else
+              to="/dashboard"
+              class="btn-outline py-2 px-4 text-sm text-center"
+            >
+              View Details
+            </router-link>
           </div>
         </div>
 
         <!-- QR Code Modal -->
-        <div v-if="selectedTicketForQR?.id === ticket.id" class="mt-4 pt-4 border-t border-border">
+        <div
+          v-if="selectedTicketForQR?.id === ticket.id"
+          class="mt-4 pt-4 border-t border-border"
+        >
           <div class="bg-muted p-4 rounded-lg flex flex-col items-center gap-4">
-            <p class="text-sm font-medium">Scan at check-in</p>
+            <p class="text-sm font-medium">
+              Scan at check-in
+            </p>
             <div class="bg-white p-4 rounded">
-              <div class="w-32 h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-2xl">QR</div>
+              <div class="w-32 h-32 bg-gradient-to-br from-foreground/10 to-foreground/20 flex items-center justify-center text-2xl text-foreground">
+                QR
+              </div>
             </div>
-            <button @click="selectedTicketForQR = null" class="btn-outline py-2 px-6">Close</button>
+            <button
+              class="btn-outline py-2 px-6"
+              @click="selectedTicketForQR = null"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>

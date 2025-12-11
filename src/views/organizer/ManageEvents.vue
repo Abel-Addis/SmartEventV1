@@ -1,13 +1,25 @@
 <template>
   <div class="space-y-6">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <h1 class="text-h2 font-bold">My Events</h1>
-      <router-link to="/organizer/create-event" class="btn-primary px-6 py-2">Create Event</router-link>
+      <h1 class="text-h2 font-bold">
+        My Events
+      </h1>
+      <router-link
+        to="/organizer/create-event"
+        class="btn-primary px-6 py-2"
+      >
+        Create Event
+      </router-link>
     </div>
 
     <!-- Filter Tabs -->
     <div class="flex gap-2 border-b border-border overflow-x-auto">
-      <button v-for="filter in ['All', 'Active', 'Drafts', 'Completed']" :key="filter" @click="activeFilter = filter" :class="['px-4 py-2 font-medium text-sm transition-colors border-b-2 whitespace-nowrap', activeFilter === filter ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">
+      <button
+        v-for="filter in ['All', 'Active', 'Drafts', 'Completed']"
+        :key="filter"
+        :class="['px-4 py-2 font-medium text-sm transition-colors border-b-2 whitespace-nowrap', activeFilter === filter ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']"
+        @click="activeFilter = filter"
+      >
         {{ filter }}
       </button>
     </div>
@@ -17,30 +29,59 @@
       <table class="w-full">
         <thead class="bg-muted border-b border-border">
           <tr>
-            <th class="px-6 py-3 text-left text-sm font-semibold">Event</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold hidden sm:table-cell">Date</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold hidden md:table-cell">Registrations</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold">Status</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold">Actions</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">
+              Event
+            </th>
+            <th class="px-6 py-3 text-left text-sm font-semibold hidden sm:table-cell">
+              Date
+            </th>
+            <th class="px-6 py-3 text-left text-sm font-semibold hidden md:table-cell">
+              Registrations
+            </th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">
+              Status
+            </th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="event in filteredEvents" :key="event.id" class="border-b border-border hover:bg-muted/50 transition-colors">
+          <tr
+            v-for="event in filteredEvents"
+            :key="event.id"
+            class="border-b border-border hover:bg-muted/50 transition-colors"
+          >
             <td class="px-6 py-4">
-              <p class="font-semibold">{{ event.title }}</p>
-              <p class="text-sm text-muted-foreground">{{ event.category }}</p>
+              <p class="font-semibold">
+                {{ event.title }}
+              </p>
+              <p class="text-sm text-muted-foreground">
+                {{ event.category }}
+              </p>
             </td>
-            <td class="px-6 py-4 hidden sm:table-cell text-sm">{{ event.date }}</td>
-            <td class="px-6 py-4 hidden md:table-cell">{{ event.registrations }}</td>
+            <td class="px-6 py-4 hidden sm:table-cell text-sm">
+              {{ event.date }}
+            </td>
+            <td class="px-6 py-4 hidden md:table-cell">
+              {{ event.registrations }}
+            </td>
             <td class="px-6 py-4">
-              <span :class="['px-3 py-1 rounded-full text-xs font-medium', event.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : event.status === 'draft' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400']">
+              <span :class="['px-3 py-1 rounded-full text-xs font-medium', event.status === 'active' ? 'bg-muted text-foreground' : event.status === 'draft' ? 'bg-muted text-muted-foreground' : 'bg-muted text-muted-foreground']">
                 {{ event.status }}
               </span>
             </td>
             <td class="px-6 py-4">
               <div class="flex gap-2">
-                <router-link to="/organizer/analytics" class="btn-outline text-xs px-3 py-1">Analytics</router-link>
-                <button class="btn-outline text-xs px-3 py-1">Edit</button>
+                <router-link
+                  to="/organizer/analytics"
+                  class="btn-outline text-xs px-3 py-1"
+                >
+                  Analytics
+                </router-link>
+                <button class="btn-outline text-xs px-3 py-1">
+                  Edit
+                </button>
               </div>
             </td>
           </tr>

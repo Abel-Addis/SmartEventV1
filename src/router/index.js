@@ -79,7 +79,7 @@ const routes = [
     component: () => import("../layouts/OrganizerLayout.vue"),
     children: [
       {
-        path: "dashboard",
+        path: "",
         name: "OrganizerDashboard",
         component: () => import("../views/organizer/Dashboard.vue"),
       },
@@ -126,7 +126,7 @@ const routes = [
     component: () => import("../layouts/AdminLayout.vue"),
     children: [
       {
-        path: "dashboard",
+        path: "",
         name: "AdminDashboard",
         component: () => import("../views/admin/Dashboard.vue"),
       },

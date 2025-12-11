@@ -1,5 +1,8 @@
 <template>
-  <div id="app" class="bg-background text-foreground min-h-screen">
+  <div
+    id="app"
+    class="bg-background text-foreground min-h-screen"
+  >
     <router-view />
   </div>
 </template>
