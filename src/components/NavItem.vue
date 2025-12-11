@@ -20,9 +20,10 @@ const isActive = computed(() => {
 
 <template>
   <router-link :to="to"
-    class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200" :class="[
+    class="group flex items-center gap-3 my-3 px-3 py-1 rounded-xl text-sm font-medium transition-all duration-200"
+    :class="[
       isActive
-        ? 'bg-sidebar-accent text-primary-foreground shadow-sm'
+        ? 'bg-foreground/90 text-background shadow-sm'
         : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
     ]">
     <span class="text-lg shrink-0">{{ icon }}</span>
