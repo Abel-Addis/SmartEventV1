@@ -23,7 +23,7 @@
       <nav class="flex-1 overflow-y-auto p-4 space-y-1">
         <nav-item to="/organizer" icon="📊" label="Dashboard" />
         <nav-item to="/organizer/create-event" icon="➕" label="Create Event" />
-        <nav-item to="/organizer/events" icon="📋" label="My Events" />
+        <nav-item to="/organizer/events" icon="📋" label="My Events" :exact="true" />
         <nav-item to="/organizer/analytics" icon="📈" label="Analytics" />
         <nav-item to="/organizer/checkin" icon="✓" label="Check-in" />
         <nav-item to="/organizer/finance" icon="💰" label="Finance" />

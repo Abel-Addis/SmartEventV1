@@ -53,6 +53,70 @@ export const eventService = {
   },
 
   /**
+   * Update ticket type
+   * @param {string} ticketTypeId - Ticket Type ID
+   * @param {Object} ticketData - Updated ticket data
+   * @returns {Promise}
+   */
+  async updateTicketType(ticketTypeId, ticketData) {
+    const response = await apiClient.put(`/events/update-ticket-type/${ticketTypeId}`, ticketData)
+    return response.data
+  },
+
+  /**
+   * Set ticket type active status
+   * @param {string} ticketTypeId - Ticket Type ID
+   * @param {boolean} isActive - Active status
+   * @returns {Promise}
+   */
+  async setTicketTypeStatus(ticketTypeId, isActive) {
+    const response = await apiClient.patch(`/events/set-active-status-ticket/${ticketTypeId}?isActive=${isActive}`)
+    return response.data
+  },
+
+  /**
+   * Remove ticket type
+   * @param {string} ticketTypeId - Ticket Type ID
+   * @returns {Promise}
+   */
+  async removeTicketType(ticketTypeId) {
+    const response = await apiClient.delete(`/events/remove-ticket-type/${ticketTypeId}`)
+    return response.data
+  },
+
+  /**
+   * Update pricing rule
+   * @param {string} ruleId - Pricing Rule ID
+   * @param {Object} ruleData - Updated rule data
+   * @returns {Promise}
+   */
+  async updatePricingRule(ruleId, ruleData) {
+    const response = await apiClient.put(`/events/update-pricing-rule/${ruleId}`, ruleData)
+    return response.data
+  },
+
+  /**
+   * Set pricing rule active status
+   * @param {string} ruleId - Pricing Rule ID
+   * @param {boolean} isActive - Active status
+   * @returns {Promise}
+   */
+  async setPricingRuleStatus(ruleId, isActive) {
+    const response = await apiClient.patch(`/events/set-status/${ruleId}?isActive=${isActive}`)
+    return response.data
+  },
+
+  /**
+   * Remove pricing rule
+   * @param {string} ruleId - Pricing Rule ID
+   * @returns {Promise}
+   */
+  async removePricingRule(ruleId) {
+    const response = await apiClient.delete(`/events/remove-pricing-rule/${ruleId}`)
+    return response.data
+  },
+
+  /**
    * Publish an event
    * @param {string} eventId - Event ID
    * @returns {Promise}

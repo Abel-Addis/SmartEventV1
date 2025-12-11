@@ -89,6 +89,16 @@ const routes = [
         component: () => import("../views/organizer/CreateEvent.vue"),
       },
       {
+        path: "events/:id",
+        name: "EventDetail",
+        component: () => import("../views/organizer/EventDetail.vue"),
+      },
+      {
+        path: "events/:id/edit",
+        name: "EventEdit",
+        component: () => import("../views/organizer/EventEdit.vue"),
+      },
+      {
         path: "events",
         name: "ManageEvents",
         component: () => import("../views/organizer/ManageEvents.vue"),

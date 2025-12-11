@@ -11,9 +11,18 @@ const props = defineProps({
     type: String,
     default: 'Label',
   },
+  exact: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const isActive = computed(() => {
+  // If exact prop is true, match exactly
+  if (props.exact) {
+    return route.path === props.to
+  }
+  // Otherwise use startsWith for parent routes
   return route.path.startsWith(props.to)
 })
 </script>
