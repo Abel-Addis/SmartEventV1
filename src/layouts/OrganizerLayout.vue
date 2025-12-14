@@ -26,11 +26,13 @@
         <nav-item to="/organizer/events" icon="📋" label="My Events" :exact="true" />
         <nav-item to="/organizer/analytics" icon="📈" label="Analytics" />
         <nav-item to="/organizer/checkin" icon="✓" label="Check-in" />
+        <nav-item to="/organizer/gate-persons" icon="🚪" label="Gate Persons" />
         <nav-item to="/organizer/finance" icon="💰" label="Finance" />
+        <nav-item to="/organizer/credits" icon="💎" label="Credits" />
       </nav>
 
       <div class="p-4 border-t border-sidebar-border">
-        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer">
+        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer group">
           <div
             class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-sm font-semibold text-foreground">
             O
@@ -39,7 +41,14 @@
             <div class="text-sm font-medium truncate text-sidebar-foreground">Organizer</div>
             <div class="text-xs text-muted-foreground truncate">team@vo.com</div>
           </div>
-          <span class="text-muted-foreground">⋯</span>
+          <button 
+            @click="authStore.logout()" 
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-sidebar-accent hover:border-accent text-muted-foreground hover:text-destructive transition-all duration-200 active:scale-[0.98] group" 
+            title="Logout"
+          >
+            <span class="text-base group-hover:scale-110 transition-transform">🚪</span>
+            <span class="text-sm font-medium">Logout</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -72,7 +81,7 @@
               <router-link to="/organizer/notifications"
                 class="relative p-2 rounded-lg border border-border bg-card hover:bg-accent transition">
                 <span class="text-lg">🔔</span>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+                <span v-if="unreadCount > 0" class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
               </router-link>
               <router-link to="/organizer/settings"
                 class="p-2 rounded-lg border border-border bg-card hover:bg-accent transition">
@@ -97,9 +106,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import NavItem from '../components/NavItem.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 
 const mobileMenuOpen = ref(false)
+const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
+
+// Get unread count from store
+const unreadCount = computed(() => notificationStore.unreadCount)
+
+// Fetch notifications on mount
+onMounted(() => {
+  notificationStore.fetchNotifications()
+})
 </script>
+

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router"
+import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
   {
@@ -114,9 +114,19 @@ const routes = [
         component: () => import("../views/organizer/CheckIn.vue"),
       },
       {
+        path: "gate-persons",
+        name: "GatePersons",
+        component: () => import("../views/organizer/GatePersons.vue"),
+      },
+      {
         path: "finance",
         name: "Finance",
         component: () => import("../views/organizer/Finance.vue"),
+      },
+      {
+        path: "credits",
+        name: "Credits",
+        component: () => import("../views/organizer/Credits.vue"),
       },
       {
         path: "notifications",
@@ -177,11 +187,11 @@ const routes = [
       },
     ],
   },
-]
+];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-})
+});
 
-export default router
+export default router;

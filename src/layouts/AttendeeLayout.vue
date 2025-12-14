@@ -33,7 +33,7 @@
       </nav>
 
       <div class="p-4 border-t border-sidebar-border bg-sidebar/70 backdrop-blur">
-        <div class="flex items-center gap-3 p-3 rounded-xl glass-muted hover:border-accent transition-colors cursor-pointer">
+        <div class="flex items-center gap-3 p-3 rounded-xl glass-muted hover:border-accent transition-colors cursor-pointer group">
           <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground flex items-center justify-center text-sm font-semibold">
             U
           </div>
@@ -41,7 +41,14 @@
             <div class="text-sm font-semibold truncate text-sidebar-foreground">You</div>
             <div class="text-xs text-muted-foreground truncate">user@nerdspace.com</div>
           </div>
-          <span class="text-muted-foreground text-lg">⋯</span>
+          <button 
+            @click="authStore.logout()" 
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/60 bg-card/60 hover:bg-sidebar-accent hover:border-accent text-muted-foreground hover:text-destructive transition-all duration-200 active:scale-[0.98] group backdrop-blur-sm" 
+            title="Logout"
+          >
+            <span class="text-base group-hover:scale-110 transition-transform">🚪</span>
+            <span class="text-sm font-medium">Logout</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -116,6 +123,8 @@
 import { ref } from 'vue'
 import NavItem from '@/components/NavItem.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const mobileMenuOpen = ref(false)
+const authStore = useAuthStore()
 </script>

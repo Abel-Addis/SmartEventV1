@@ -34,7 +34,7 @@
 
       <!-- Profile -->
       <div class="p-4 border-t border-sidebar-border">
-        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer">
+        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer group">
           <div
             class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-sm font-semibold text-foreground">
             A
@@ -43,7 +43,14 @@
             <div class="text-sm font-medium truncate text-sidebar-foreground">Admin</div>
             <div class="text-xs text-muted-foreground truncate">admin@vo.com</div>
           </div>
-          <span class="text-muted-foreground">⋯</span>
+          <button 
+            @click="authStore.logout()" 
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-sidebar-accent hover:border-accent text-muted-foreground hover:text-destructive transition-all duration-200 active:scale-[0.98] group" 
+            title="Logout"
+          >
+            <span class="text-base group-hover:scale-110 transition-transform">🚪</span>
+            <span class="text-sm font-medium">Logout</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -107,6 +114,8 @@
 import { ref } from 'vue'
 import NavItem from '@/components/NavItem.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const mobileMenuOpen = ref(false)
+const authStore = useAuthStore()
 </script>
