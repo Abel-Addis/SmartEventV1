@@ -39,4 +39,28 @@ export const creditService = {
     const response = await apiClient.get("/organizer-credit/transactions");
     return response.data;
   },
+
+  /**
+   * Initialize credit payment with Chapa
+   * @param {string} creditTransactionId - The credit transaction ID (Guid)
+   * @returns {Promise} Response with PaymentResultDto { paymentId, checkoutUrl, paymentReference, status }
+   */
+  async initializePayment(creditTransactionId) {
+    const response = await apiClient.post(
+      `/Payment/credit/initialize?creditTransactionId=${creditTransactionId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Verify payment callback from Chapa
+   * @param {string} txRef - Transaction reference from Chapa callback
+   * @returns {Promise} Response with payment verification result
+   */
+  async verifyPayment(txRef) {
+    const response = await apiClient.get(
+      `/Payment/credit/callback?tx_ref=${txRef}`
+    );
+    return response.data;
+  },
 };

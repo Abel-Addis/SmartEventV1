@@ -203,12 +203,20 @@
                 >
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex-1 space-y-2">
-                      <input
-                        v-model="assignment.eventName"
-                        type="text"
-                        placeholder="Event Name"
+                      <select
+                        v-model="assignment.eventId"
+                        @change="onEventSelect(assignment)"
                         class="input-field w-full text-sm"
-                      />
+                      >
+                        <option value="">Select Event</option>
+                        <option
+                          v-for="event in assignmentEvents"
+                          :key="event.eventId"
+                          :value="event.eventId"
+                        >
+                          {{ event.eventName }}
+                        </option>
+                      </select>
                       <input
                         v-model="assignment.gateName"
                         type="text"
@@ -270,6 +278,7 @@ const formData = ref({
 
 // Computed properties from store
 const gatePersons = computed(() => gatePersonStore.gatePersons)
+const assignmentEvents = computed(() => gatePersonStore.assignmentEvents)
 const sortedGatePersons = computed(() => gatePersonStore.sortedGatePersons)
 const loading = computed(() => gatePersonStore.loading)
 const error = computed(() => gatePersonStore.error)
@@ -280,14 +289,16 @@ onMounted(async () => {
 })
 
 // Modal functions
-const openCreateModal = () => {
+const openCreateModal = async () => {
   isEditMode.value = false
   editingGatePersonId.value = null
   resetForm()
+  // Fetch events for dropdown
+  await gatePersonStore.fetchAssignmentEvents()
   showModal.value = true
 }
 
-const openEditModal = (gatePerson) => {
+const openEditModal = async (gatePerson) => {
   isEditMode.value = true
   editingGatePersonId.value = gatePerson.userId
   formData.value = {
@@ -297,6 +308,8 @@ const openEditModal = (gatePerson) => {
     password: '',
     assignments: gatePerson.assignments ? [...gatePerson.assignments] : []
   }
+  // Fetch events for dropdown
+  await gatePersonStore.fetchAssignmentEvents()
   showModal.value = true
 }
 
@@ -328,6 +341,14 @@ const addAssignment = () => {
 
 const removeAssignment = (index) => {
   formData.value.assignments.splice(index, 1)
+}
+
+// Handle event selection
+const onEventSelect = (assignment) => {
+  const selectedEvent = assignmentEvents.value.find(e => e.eventId === assignment.eventId)
+  if (selectedEvent) {
+    assignment.eventName = selectedEvent.eventName
+  }
 }
 
 // Form submission

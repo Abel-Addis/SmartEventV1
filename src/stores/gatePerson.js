@@ -5,6 +5,7 @@ import { gatePersonService } from "../services/gatePersonService";
 export const useGatePersonStore = defineStore("gatePerson", () => {
   // State
   const gatePersons = ref([]);
+  const assignmentEvents = ref([]);
   const loading = ref(false);
   const error = ref(null);
 
@@ -118,9 +119,30 @@ export const useGatePersonStore = defineStore("gatePerson", () => {
     }
   }
 
+  async function fetchAssignmentEvents() {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await gatePersonService.getAssignmentEvents();
+      assignmentEvents.value = response;
+      return { success: true, data: response };
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch assignment events";
+      error.value = errorMessage;
+      return { success: false, message: errorMessage };
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     // State
     gatePersons,
+    assignmentEvents,
     loading,
     error,
     // Getters
@@ -128,6 +150,7 @@ export const useGatePersonStore = defineStore("gatePerson", () => {
     sortedGatePersons,
     // Actions
     fetchGatePersons,
+    fetchAssignmentEvents,
     createGatePerson,
     updateGatePerson,
     deleteGatePerson,

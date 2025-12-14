@@ -324,50 +324,38 @@ const selectedEvent = ref(null)
 const bookedUsers = ref([])
 const loadingUsers = ref(false)
 
-// Helper to get theme colors
-const getThemeColor = (varName) => {
-  const root = document.documentElement
-  const value = getComputedStyle(root).getPropertyValue(varName).trim()
-  if (!value) return '#888888'
-
-  // Parse HSL values and convert to RGB
-  const hslValues = value.split(' ').map(v => parseFloat(v))
-  if (hslValues.length !== 3) return '#888888'
-
-  const [h, s, l] = hslValues
-  return hslToRgb(h, s / 100, l / 100)
+// Helper to detect if dark mode is active
+const isDarkMode = () => {
+  if (typeof window === 'undefined') return false
+  return document.documentElement.classList.contains('dark') || 
+         window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
-// Convert HSL to RGB
-const hslToRgb = (h, s, l) => {
-  let r, g, b
-
-  if (s === 0) {
-    r = g = b = l
-  } else {
-    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1
-      if (t > 1) t -= 1
-      if (t < 1 / 6) return p + (q - p) * 6 * t
-      if (t < 1 / 2) return q
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
-      return p
-    }
-
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
-    const p = 2 * l - q
-    r = hue2rgb(p, q, h / 360 + 1 / 3)
-    g = hue2rgb(p, q, h / 360)
-    b = hue2rgb(p, q, h / 360 - 1 / 3)
+// Get visible chart colors that work in both light and dark modes
+const getChartColors = () => {
+  const dark = isDarkMode()
+  
+  // Return distinct, visible colors
+  // Light mode: darker, more saturated colors
+  // Dark mode: lighter, more vibrant colors
+  return {
+    primary: dark ? 'rgba(96, 165, 250, 1)' : 'rgba(37, 99, 235, 1)',      // Blue
+    primaryLight: dark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.2)',
+    secondary: dark ? 'rgba(167, 243, 208, 1)' : 'rgba(16, 185, 129, 1)', // Green
+    secondaryLight: dark ? 'rgba(167, 243, 208, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+    accent: dark ? 'rgba(251, 191, 36, 1)' : 'rgba(245, 158, 11, 1)',     // Orange/Yellow
+    accentLight: dark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+    purple: dark ? 'rgba(196, 181, 253, 1)' : 'rgba(139, 92, 246, 1)',   // Purple
+    purpleLight: dark ? 'rgba(196, 181, 253, 0.2)' : 'rgba(139, 92, 246, 0.2)',
+    pink: dark ? 'rgba(251, 113, 133, 1)' : 'rgba(236, 72, 153, 1)',     // Pink
+    pinkLight: dark ? 'rgba(251, 113, 133, 0.2)' : 'rgba(236, 72, 153, 0.2)',
+    teal: dark ? 'rgba(94, 234, 212, 1)' : 'rgba(20, 184, 166, 1)',      // Teal
+    tealLight: dark ? 'rgba(94, 234, 212, 0.2)' : 'rgba(20, 184, 166, 0.2)',
+    red: dark ? 'rgba(252, 165, 165, 1)' : 'rgba(239, 68, 68, 1)',       // Red
+    redLight: dark ? 'rgba(252, 165, 165, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+    gray: dark ? 'rgba(203, 213, 225, 1)' : 'rgba(100, 116, 139, 1)',    // Gray
+    grayLight: dark ? 'rgba(203, 213, 225, 0.2)' : 'rgba(100, 116, 139, 0.2)'
   }
-
-  return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`
-}
-
-// Get color with opacity
-const getThemeColorWithOpacity = (varName, opacity) => {
-  const rgb = getThemeColor(varName)
-  return rgb.replace('rgb', 'rgba').replace(')', `, ${opacity})`)
 }
 
 // Chart data computed properties
@@ -376,6 +364,7 @@ const dailySalesChartData = computed(() => {
     return null
   }
 
+  const colors = getChartColors()
   const sortedSales = [...overview.value.dailySales].sort((a, b) => new Date(a.date) - new Date(b.date))
 
   return {
@@ -387,16 +376,16 @@ const dailySalesChartData = computed(() => {
       {
         label: 'Tickets Sold',
         data: sortedSales.map(item => item.ticketsSold),
-        borderColor: getThemeColor('--primary'),
-        backgroundColor: getThemeColorWithOpacity('--primary', 0.2),
+        borderColor: colors.primary,
+        backgroundColor: colors.primaryLight,
         fill: true,
         tension: 0.4
       },
       {
         label: 'Revenue ($)',
         data: sortedSales.map(item => item.revenue),
-        borderColor: getThemeColor('--accent'),
-        backgroundColor: getThemeColorWithOpacity('--accent', 0.2),
+        borderColor: colors.secondary,
+        backgroundColor: colors.secondaryLight,
         fill: true,
         tension: 0.4,
         yAxisID: 'y1'
@@ -410,9 +399,24 @@ const revenueBreakdownChartData = computed(() => {
     return null
   }
 
+  const colors = getChartColors()
   const sortedEvents = [...overview.value.eventRevenueBreakdown]
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 10) // Top 10 events
+
+  // Create gradient colors for bars
+  const barColors = [
+    colors.primary,
+    colors.secondary,
+    colors.accent,
+    colors.purple,
+    colors.pink,
+    colors.teal,
+    colors.red,
+    colors.gray,
+    colors.primary,
+    colors.secondary
+  ]
 
   return {
     labels: sortedEvents.map(item => {
@@ -423,8 +427,8 @@ const revenueBreakdownChartData = computed(() => {
       {
         label: 'Revenue ($)',
         data: sortedEvents.map(item => item.revenue),
-        backgroundColor: getThemeColor('--primary'),
-        borderColor: getThemeColor('--border'),
+        backgroundColor: barColors.slice(0, sortedEvents.length),
+        borderColor: isDarkMode() ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
         borderWidth: 1
       }
     ]
@@ -433,6 +437,9 @@ const revenueBreakdownChartData = computed(() => {
 
 const bookingStatusChartData = computed(() => {
   if (!overview.value) return null
+
+  const colors = getChartColors()
+  const dark = isDarkMode()
 
   return {
     labels: ['Confirmed', 'Pending', 'Cancelled'],
@@ -444,11 +451,11 @@ const bookingStatusChartData = computed(() => {
           overview.value.cancelledBookings
         ],
         backgroundColor: [
-          getThemeColor('--primary'),
-          getThemeColor('--accent'),
-          getThemeColor('--destructive')
+          colors.secondary,  // Green for confirmed
+          colors.accent,     // Orange/Yellow for pending
+          colors.red         // Red for cancelled
         ],
-        borderColor: getThemeColor('--background'),
+        borderColor: dark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
         borderWidth: 2
       }
     ]
@@ -458,16 +465,19 @@ const bookingStatusChartData = computed(() => {
 const eventStatusChartData = computed(() => {
   if (!overview.value) return null
 
+  const colors = getChartColors()
+  const dark = isDarkMode()
+
   return {
     labels: ['Published', 'Draft'],
     datasets: [
       {
         data: [overview.value.publishedEvents, overview.value.draftEvents],
         backgroundColor: [
-          getThemeColor('--primary'),
-          getThemeColor('--muted')
+          colors.primary,  // Blue for published
+          colors.gray     // Gray for draft
         ],
-        borderColor: getThemeColor('--background'),
+        borderColor: dark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
         borderWidth: 2
       }
     ]
@@ -479,6 +489,7 @@ const eventSalesChartData = computed(() => {
     return null
   }
 
+  const colors = getChartColors()
   const sortedSales = [...selectedEvent.value.last7DaysSales].sort((a, b) => new Date(a.date) - new Date(b.date))
 
   return {
@@ -490,8 +501,8 @@ const eventSalesChartData = computed(() => {
       {
         label: 'Tickets Sold',
         data: sortedSales.map(item => item.ticketsSold),
-        borderColor: getThemeColor('--primary'),
-        backgroundColor: getThemeColorWithOpacity('--primary', 0.3),
+        borderColor: colors.primary,
+        backgroundColor: colors.primaryLight,
         fill: true,
         tension: 0.4
       }
@@ -504,13 +515,17 @@ const ticketDistributionChartData = computed(() => {
     return null
   }
 
-  const colors = [
-    getThemeColor('--primary'),
-    getThemeColor('--accent'),
-    getThemeColor('--secondary'),
-    'rgb(16, 185, 129)',
-    'rgb(245, 158, 11)',
-    'rgb(239, 68, 68)'
+  const colors = getChartColors()
+  const dark = isDarkMode()
+  const chartColors = [
+    colors.primary,
+    colors.secondary,
+    colors.accent,
+    colors.purple,
+    colors.pink,
+    colors.teal,
+    colors.red,
+    colors.gray
   ]
 
   return {
@@ -518,8 +533,8 @@ const ticketDistributionChartData = computed(() => {
     datasets: [
       {
         data: selectedEvent.value.tickets.map(t => t.sold),
-        backgroundColor: colors.slice(0, selectedEvent.value.tickets.length),
-        borderColor: getThemeColor('--background'),
+        backgroundColor: chartColors.slice(0, selectedEvent.value.tickets.length),
+        borderColor: dark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
         borderWidth: 2
       }
     ]

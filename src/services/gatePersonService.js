@@ -46,4 +46,13 @@ export const gatePersonService = {
     const response = await apiClient.get("/gatepersons/getAllScanners");
     return response.data;
   },
+
+  /**
+   * Get organizer's events for assignment dropdown
+   * @returns {Promise} Response with array of events {eventId, eventName}
+   */
+  async getAssignmentEvents() {
+    const response = await apiClient.get("/gatepersons/get-assignment-events");
+    return response.data;
+  },
 };

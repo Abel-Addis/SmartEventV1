@@ -193,12 +193,16 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useCreditStore } from '@/stores/credit'
+import { useRoute } from 'vue-router'
+import { useCreditStore } from '../../stores/credit'
+import { creditService } from '../../services/creditService'
 
 const creditStore = useCreditStore()
+const route = useRoute() // Call useRoute at the top level
 
 // Local state
 const creditsToBy = ref(null)
+const paymentReference = ref(null) // Store payment reference for verification
 
 // Computed properties from store
 const currentBalance = computed(() => creditStore.currentBalance)
@@ -214,16 +218,26 @@ const totalAmount = computed(() => {
   return (creditsToBy.value || 0) * creditPriceETB.value
 })
 
-// Fetch data on mount
+// Fetch data on mount and check for payment callback
 onMounted(async () => {
   await Promise.all([
     creditStore.fetchBalance(),
     creditStore.fetchPurchaseInfo(),
     creditStore.fetchTransactions()
   ])
+
+  // Check if we have a stored payment reference to verify
+  // This means user returned from payment gateway
+  const storedPaymentRef = sessionStorage.getItem('creditPaymentReference')
+  if (storedPaymentRef) {
+    paymentReference.value = storedPaymentRef
+    await handlePaymentCallback()
+    // Clear the stored reference after processing
+    sessionStorage.removeItem('creditPaymentReference')
+  }
 })
 
-// Handle purchase
+// Handle purchase - initialize payment and redirect to Chapa
 const handlePurchase = async () => {
   if (!creditsToBy.value || creditsToBy.value < 1) {
     alert('Please enter a valid number of credits')
@@ -231,18 +245,74 @@ const handlePurchase = async () => {
   }
 
   const confirmed = confirm(
-    `Purchase ${creditsToBy.value} credits for ${totalAmount.value} ETB?`
+    `Purchase ${creditsToBy.value} credits for ${totalAmount.value} ETB?\n\nYou will be redirected to Chapa payment gateway.`
   )
   
   if (confirmed) {
-    const result = await creditStore.purchaseCredits(creditsToBy.value)
-
-    if (result.success) {
-      alert('Credit purchase initiated! Please complete the payment.')
-      creditsToBy.value = null
-    } else {
-      alert(`Purchase failed: ${result.message}`)
+    try {
+      creditStore.loading = true
+      
+      // Step 1: Create pending transaction
+      const transactionResponse = await creditService.buyCredits(creditsToBy.value)
+      
+      if (!transactionResponse || !transactionResponse.creditTransactionId) {
+        alert('Failed to create transaction. Please try again.')
+        return
+      }
+      
+      // Step 2: Initialize payment with the transaction ID
+      const paymentResponse = await creditService.initializePayment(transactionResponse.creditTransactionId)
+      
+      // Step 3: Store payment reference for verification after payment
+      if (paymentResponse.paymentReference) {
+        paymentReference.value = paymentResponse.paymentReference
+        // Store in sessionStorage so we can verify when user returns
+        sessionStorage.setItem('creditPaymentReference', paymentResponse.paymentReference)
+      }
+      
+      // Step 4: Redirect to Chapa checkout URL
+      if (paymentResponse.checkoutUrl) {
+        window.location.href = paymentResponse.checkoutUrl
+      } else {
+        alert('Payment initialization failed: No checkout URL received')
+        sessionStorage.removeItem('creditPaymentReference')
+      }
+    } catch (err) {
+      alert(`Payment initialization failed: ${err.response?.data?.message || err.message}`)
+      sessionStorage.removeItem('creditPaymentReference')
+    } finally {
+      creditStore.loading = false
     }
+  }
+}
+
+// Handle payment callback
+const handlePaymentCallback = async () => {
+  try {
+    // Use the paymentReference we stored (not from URL)
+    // The backend parameter is named tx_ref but it expects the paymentReference value
+    if (!paymentReference.value) {
+      alert('Payment callback failed: Payment reference not found.')
+      return
+    }
+    
+    // Verify payment using the paymentReference from initialize response
+    // The backend returns Ok("Credit purchase completed successfully!") on success
+    // or BadRequest on failure (which will throw an error)
+    await creditService.verifyPayment(paymentReference.value)
+    
+    // If we reach here, payment was successful
+    alert('Payment successful! Your credits have been added.')
+    // Refresh balance and transactions
+    await creditStore.fetchBalance()
+    await creditStore.fetchTransactions()
+    
+    // Clear payment reference
+    paymentReference.value = null
+  } catch (err) {
+    console.error('Payment callback error:', err)
+    alert('Error verifying payment. Please contact support if credits were deducted.')
+    paymentReference.value = null
   }
 }
 
