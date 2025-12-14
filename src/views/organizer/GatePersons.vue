@@ -282,7 +282,7 @@ const assignmentEvents = computed(() => gatePersonStore.assignmentEvents)
 const sortedGatePersons = computed(() => gatePersonStore.sortedGatePersons)
 const loading = computed(() => gatePersonStore.loading)
 const error = computed(() => gatePersonStore.error)
-
+console.log("gatePersons",gatePersons.value)
 // Fetch gate persons on mount
 onMounted(async () => {
   await gatePersonStore.fetchGatePersons()
@@ -353,11 +353,22 @@ const onEventSelect = (assignment) => {
 
 // Form submission
 const handleSubmit = async () => {
+  // Transform assignments to match backend DTO structure
+  const assignments = formData.value.assignments
+    .filter(a => a.eventId) // Only include assignments with selected event
+    .map(a => ({
+      eventId: a.eventId, // Keep as string/Guid - backend will handle conversion
+      eventName: a.eventName || assignmentEvents.value.find(e => e.eventId === a.eventId)?.eventName || '',
+      gateName: a.gateName || null,
+      assignmentDate: a.assignmentDate || new Date().toISOString(),
+      notes: a.notes || null
+    }))
+
   const data = {
     fullName: formData.value.fullName,
     email: formData.value.email,
     phoneNumber: formData.value.phoneNumber,
-    assignments: formData.value.assignments
+    assignments: assignments
   }
 
   // Only include password if provided
@@ -367,6 +378,9 @@ const handleSubmit = async () => {
 
   let result
   if (isEditMode.value) {
+    // For update, we need to find the GatePerson by UserId
+    // The backend expects GatePerson.Id, but we have User.Id
+    // We'll need to use the userId and let the backend find the GatePerson
     result = await gatePersonStore.updateGatePerson(editingGatePersonId.value, data)
   } else {
     result = await gatePersonStore.createGatePerson(data)

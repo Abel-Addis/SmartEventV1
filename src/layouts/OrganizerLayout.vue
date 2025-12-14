@@ -109,8 +109,8 @@
 import { ref, computed, onMounted } from 'vue'
 import NavItem from '../components/NavItem.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
-import { useAuthStore } from '@/stores/auth'
-import { useNotificationStore } from '@/stores/notification'
+import { useAuthStore } from '../stores/auth'
+import { useNotificationStore } from '../stores/notification'
 
 const mobileMenuOpen = ref(false)
 const authStore = useAuthStore()
