@@ -9,10 +9,18 @@
       </p>
     </div>
 
-    <div class="space-y-4">
+    <div v-if="loading" class="text-center py-12 text-muted-foreground">
+      Loading tickets...
+    </div>
+
+    <div v-else-if="tickets.length === 0" class="text-center py-12 text-muted-foreground">
+      You haven't booked any events yet.
+    </div>
+
+    <div v-else class="space-y-4">
       <div
         v-for="ticket in tickets"
-        :key="ticket.id"
+        :key="ticket.bookingId"
         class="card hover:shadow-lg transition-shadow"
       >
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -21,55 +29,46 @@
               {{ ticket.eventTitle }}
             </h3>
             <p class="text-muted-foreground text-sm mb-3">
-              {{ ticket.date }} at {{ ticket.time }}
+              Booked on {{ formatDate(ticket.bookingDate) }}
             </p>
             <div class="flex flex-wrap gap-3">
-              <span class="badge">Ticket #{{ ticket.ticketNo }}</span>
-              <span :class="['badge', ticket.status === 'used' ? 'bg-muted text-muted-foreground' : ticket.status === 'upcoming' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground']">{{ ticket.status }}</span>
+              <span class="badge text-xs">{{ ticket.bookingStatus }}</span>
+              <span :class="['badge text-xs', ticket.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700']">
+                {{ ticket.paymentStatus }}
+              </span>
+              <span class="text-sm font-bold ml-2">{{ formatCurrency(ticket.totalAmount) }}</span>
             </div>
           </div>
 
           <div class="flex flex-col gap-2 sm:text-right">
             <p class="text-sm text-muted-foreground">
-              Order #{{ ticket.orderId }}
+               ID: {{ ticket.bookingId.slice(0, 8) }}...
             </p>
-            <button
-              v-if="ticket.status !== 'used'"
-              class="btn-primary py-2 px-4 text-sm"
-              @click="showQR(ticket)"
-            >
-              Show QR Code
-            </button>
-            <router-link
-              v-else
-              to="/dashboard"
-              class="btn-outline py-2 px-4 text-sm text-center"
-            >
-              View Details
-            </router-link>
-          </div>
-        </div>
-
-        <!-- QR Code Modal -->
-        <div
-          v-if="selectedTicketForQR?.id === ticket.id"
-          class="mt-4 pt-4 border-t border-border"
-        >
-          <div class="bg-muted p-4 rounded-lg flex flex-col items-center gap-4">
-            <p class="text-sm font-medium">
-              Scan at check-in
-            </p>
-            <div class="bg-white p-4 rounded">
-              <div class="w-32 h-32 bg-gradient-to-br from-foreground/10 to-foreground/20 flex items-center justify-center text-2xl text-foreground">
-                QR
-              </div>
+            
+            <!-- Actions -->
+            <div class="flex gap-2 justify-end">
+               <a
+                 v-if="ticket.canPayNow && ticket.checkoutUrl"
+                 :href="ticket.checkoutUrl"
+                 class="btn-primary py-1 px-4 text-sm"
+               >
+                 Pay Now
+               </a>
+               <button
+                 v-if="ticket.bookingStatus !== 'Cancelled' && ticket.bookingStatus !== 'Used' && !ticket.eventEnded"
+                 class="btn-outline py-1 px-3 text-sm text-destructive hover:bg-destructive/10"
+                 @click="cancelBooking(ticket.bookingId)"
+               >
+                 Cancel
+               </button>
+               <router-link
+                v-if="ticket.paymentStatus === 'Paid'"
+                 to="/dashboard" 
+                 class="btn-outline py-1 px-3 text-sm"
+               >
+                 View Event
+               </router-link>
             </div>
-            <button
-              class="btn-outline py-2 px-6"
-              @click="selectedTicketForQR = null"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
@@ -78,41 +77,52 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { attendeeService } from '@/services/attendeeService'
 
-const selectedTicketForQR = ref(null)
+const tickets = ref([])
+const loading = ref(true)
 
-const tickets = [
-  {
-    id: 1,
-    eventTitle: 'Summer Music Festival',
-    date: 'Aug 15, 2025',
-    time: '4:00 PM',
-    ticketNo: '12345678',
-    orderId: 'ORD-001',
-    status: 'upcoming',
-  },
-  {
-    id: 2,
-    eventTitle: 'Tech Conference 2025',
-    date: 'Sep 20, 2025',
-    time: '9:00 AM',
-    ticketNo: '87654321',
-    orderId: 'ORD-002',
-    status: 'upcoming',
-  },
-  {
-    id: 3,
-    eventTitle: 'Jazz Night',
-    date: 'Aug 25, 2025',
-    time: '7:30 PM',
-    ticketNo: '11223344',
-    orderId: 'ORD-003',
-    status: 'used',
-  },
-]
+onMounted(async () => {
+  await fetchTickets()
+})
 
-const showQR = (ticket) => {
-  selectedTicketForQR.value = ticket
+const fetchTickets = async () => {
+  loading.value = true
+  try {
+    const data = await attendeeService.getMyBookings()
+    tickets.value = data || []
+  } catch (err) {
+    console.error("Failed to fetch tickets", err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const cancelBooking = async (id) => {
+  if(!confirm("Are you sure you want to cancel this booking?")) return
+  
+  try {
+    await attendeeService.cancelBooking(id) // Expected to return success message or updated booking
+    alert("Booking cancelled successfully")
+    await fetchTickets()
+  } catch (err) {
+    alert("Failed to cancel booking")
+  }
+}
+
+const formatDate = (dateString) => {
+  if(!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const formatCurrency = (val) => {
+   return new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB' }).format(val)
 }
 </script>

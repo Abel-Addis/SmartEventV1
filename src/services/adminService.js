@@ -94,7 +94,7 @@ export const adminService = {
 
   /**
    * Search users
-   * @param {Object} searchParams - Search criteria
+   * @param {Object} searchParams - Search criteria {fullName, email, phoneNumber, role, status}
    * @param {Object} pageParams - Pagination params
    * @returns {Promise} PaginatedResult<UserListResponse>
    */
@@ -106,14 +106,17 @@ export const adminService = {
       ...(pageParams.sortDirection && {
         sortDirection: pageParams.sortDirection,
       }),
-      ...(searchParams.fullName && { fullName: searchParams.fullName }),
-      ...(searchParams.email && { email: searchParams.email }),
-      ...(searchParams.phoneNumber && {
-        phoneNumber: searchParams.phoneNumber,
-      }),
-      ...(searchParams.role && { role: searchParams.role }),
-      ...(searchParams.status && { status: searchParams.status }),
     });
+
+    // Add search parameters directly to query string
+    if (searchParams.fullName)
+      queryParams.append("fullName", searchParams.fullName);
+    if (searchParams.email) queryParams.append("email", searchParams.email);
+    if (searchParams.phoneNumber)
+      queryParams.append("phoneNumber", searchParams.phoneNumber);
+    if (searchParams.role) queryParams.append("role", searchParams.role);
+    if (searchParams.status) queryParams.append("status", searchParams.status);
+
     const response = await apiClient.get(`/admin/users/search?${queryParams}`);
     return response.data;
   },
@@ -138,6 +141,159 @@ export const adminService = {
    */
   async getAllEvents() {
     const response = await apiClient.get("/admin/events");
+    return response.data;
+  },
+
+  /**
+   * Platform revenue summary
+   * @returns {Promise<PlatformRevenueSummaryDto>}
+   */
+  async getPlatformRevenue() {
+    const response = await apiClient.get(
+      "/admin/AdminPlatform/Get-Platform-Revenue"
+    );
+    return response.data;
+  },
+
+  /**
+   * Boost analytics
+   * @returns {Promise<BoostAnalyticsDto[]>}
+   */
+  async getBoostAnalytics() {
+    const response = await apiClient.get("/admin/AdminPlatform/BoostAnalytics");
+    return response.data;
+  },
+
+  /**
+   * Get platform settings
+   * @returns {Promise<{creditPriceETB:number, initialOrganizerCredits:number, eventPublishCost:number}>}
+   */
+  async getPlatformSettings() {
+    const response = await apiClient.get(
+      "/admin/AdminPlatform/Get-Platform-Settings"
+    );
+    return response.data;
+  },
+
+  /**
+   * Update platform settings
+   * @param {{creditPriceETB:number, initialOrganizerCredits:number, eventPublishCost:number}} payload
+   */
+  async updatePlatformSettings(payload) {
+    const response = await apiClient.put(
+      "/admin/AdminPlatform/Update-Platform-Settings",
+      payload
+    );
+    return response.data;
+  },
+
+  /**
+   * Add credit to organizer
+   * @param {{ userId:string, credits:number, reason?:string }} payload
+   */
+  async addCreditToOrganizer(payload) {
+    const query = new URLSearchParams({
+      UserId: payload.userId,
+      Credits: payload.credits,
+      ...(payload.reason && { Reason: payload.reason }),
+    });
+    const response = await apiClient.post(
+      `/admin/AdminPlatform/Add-Credit-to-Organizer?${query}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get all boost levels
+   * @returns {Promise<BoostLevelDto[]>}
+   */
+  async getAllBoostLevels() {
+    const response = await apiClient.get(
+      "/admin/AdminBoost/Get-All-Boost-Levels"
+    );
+    return response.data;
+  },
+
+  /**
+   * Update boost level
+   * @param {UpdateBoostLevelDto} payload
+   */
+  async updateBoostLevel(payload) {
+    const response = await apiClient.put(
+      "/admin/AdminBoost/Update-Boost-Level",
+      payload
+    );
+    return response.data;
+  },
+
+  /**
+   * Update boost level status
+   * @param {string} id - Boost Level ID
+   * @param {boolean} isActive
+   */
+  async setBoostLevelStatus(id, isActive) {
+    const response = await apiClient.post(
+      `/admin/AdminBoost/BoostLevel-UpdateStatus/${id}?IsActive=${isActive}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get system health
+   * @returns {Promise<SystemHealthSnapshot>}
+   */
+  async getSystemHealth() {
+    const response = await apiClient.get("/admin/health/check");
+    return response.data;
+  },
+
+  // --- Recommendation ---
+
+  async getRecommendationMetrics() {
+    const response = await apiClient.get("/admin/recommend/metrics");
+    return response.data;
+  },
+
+  async retrainGlobalModel() {
+    const response = await apiClient.post("/admin/recommend/retrain");
+    return response.data;
+  },
+
+  async retrainUserModel(userId) {
+    const response = await apiClient.post(`/admin/recommend/retrain/${userId}`);
+    return response.data;
+  },
+
+  // --- Bookings & Events ---
+
+  async getUserBookings(userId) {
+    const response = await apiClient.get(
+      `/bookings/get-bookings-by-user/${userId}`
+    );
+    return response.data;
+  },
+
+  async getOrganizerEvents(organizerId) {
+    const response = await apiClient.get(
+      `/events/get-events-by-organizer/${organizerId}`
+    );
+    return response.data;
+  },
+
+  // --- Notifications ---
+
+  async getAdminNotifications() {
+    const response = await apiClient.get("/Notification/user"); // Uses endpoint getting current user's notifs
+    return response.data;
+  },
+
+  async markNotificationRead(id) {
+    const response = await apiClient.post(`/Notification/${id}/read`);
+    return response.data;
+  },
+
+  async sendTestNotification() {
+    const response = await apiClient.post("/Notification/test");
     return response.data;
   },
 };

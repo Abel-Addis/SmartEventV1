@@ -85,7 +85,12 @@
               <router-link to="/admin/notifications"
                 class="relative p-2 rounded-lg border border-border bg-card hover:bg-accent transition">
                 <span class="text-lg">🔔</span>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+                <span
+                  v-if="notificationStore.unreadCount > 0"
+                  class="absolute top-1 right-1 w-2.5 h-2.5 bg-destructive rounded-full flex items-center justify-center text-[8px] text-white font-bold"
+                >
+                  {{ notificationStore.unreadCount > 9 ? '9+' : notificationStore.unreadCount }}
+                </span>
               </router-link>
               <router-link to="/admin/settings"
                 class="p-2 rounded-lg border border-border bg-card hover:bg-accent transition">
@@ -111,11 +116,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import NavItem from '@/components/NavItem.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 
 const mobileMenuOpen = ref(false)
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
+
+onMounted(() => {
+  if (authStore.user) {
+    notificationStore.fetchNotifications()
+  }
+})
 </script>

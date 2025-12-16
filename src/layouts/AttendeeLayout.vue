@@ -90,7 +90,7 @@
               <ThemeToggle />
               <router-link to="/dashboard/notifications" class="relative p-2 rounded-xl border border-border bg-card/60 hover:border-accent transition">
                 <span class="text-lg">🔔</span>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" />
+                <span v-if="notificationStore.unreadCount > 0" class="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" />
               </router-link>
               <router-link to="/dashboard/settings" class="p-2 rounded-xl border border-border bg-card/60 hover:border-accent transition">
                 <span class="text-lg">⚙️</span>
@@ -120,11 +120,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import NavItem from '@/components/NavItem.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 
 const mobileMenuOpen = ref(false)
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
+
+onMounted(() => {
+  notificationStore.fetchNotifications()
+})
 </script>

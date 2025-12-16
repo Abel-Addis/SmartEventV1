@@ -63,7 +63,7 @@
 
     <!-- Empty State -->
     <div
-      v-if="filteredNotifications.length === 0"
+      v-if="filteredNotifications.length === 0 && !loading"
       class="card text-center py-12"
     >
       <p class="text-3xl mb-2">
@@ -80,62 +80,30 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useNotificationStore } from '@/stores/notification'
 
+const store = useNotificationStore()
 const activeFilter = ref('All')
-const filters = ['All', 'Events', 'Orders', 'Promotions', 'System']
+const filters = ['All', 'Events', 'Orders', 'System']
 
-const notifications = ref([
-  {
-    id: 1,
-    type: 'event',
-    title: 'Event Starting Soon',
-    message: 'Summer Music Festival starts in 5 days. Get ready!',
-    timestamp: '2 minutes ago',
-    read: false,
-    icon: '🎉',
-  },
-  {
-    id: 2,
-    type: 'order',
-    title: 'Ticket Confirmed',
-    message: 'Your tickets for Tech Conference 2025 have been confirmed.',
-    timestamp: '1 hour ago',
-    read: false,
-    icon: '✓',
-  },
-  {
-    id: 3,
-    type: 'promotion',
-    title: 'Special Offer',
-    message: 'Get 20% off tickets to Jazz Night this weekend!',
-    timestamp: '3 hours ago',
-    read: true,
-    icon: '🎁',
-  },
-  {
-    id: 4,
-    type: 'event',
-    title: 'Similar Events Found',
-    message: 'We found 5 similar events based on your preferences.',
-    timestamp: 'Yesterday',
-    read: true,
-    icon: '🔍',
-  },
-  {
-    id: 5,
-    type: 'system',
-    title: 'Security Update',
-    message: 'Your account was accessed from a new device.',
-    timestamp: '2 days ago',
-    read: true,
-    icon: '🔒',
-  },
-])
-
-const unreadCount = computed(() => {
-  return notifications.value.filter(n => !n.read).length
+onMounted(() => {
+  store.fetchNotifications()
 })
+
+const unreadCount = computed(() => store.unreadCount)
+const loading = computed(() => store.loading)
+
+// Map store notifications to UI format if needed, or use directly
+const notifications = computed(() => store.sortedNotifications.map(n => ({
+  id: n.id,
+  title: n.title,
+  message: n.message,
+  type: n.type?.toLowerCase() || 'system',
+  timestamp: new Date(n.createdAt).toLocaleString(),
+  read: n.isRead,
+  icon: getIcon(n.type)
+})))
 
 const filteredNotifications = computed(() => {
   if (activeFilter.value === 'All') return notifications.value
@@ -143,11 +111,23 @@ const filteredNotifications = computed(() => {
 })
 
 const toggleRead = (id) => {
-  const notification = notifications.value.find(n => n.id === id)
-  if (notification) notification.read = !notification.read
+  const n = notifications.value.find(x => x.id === id)
+  if (n && !n.read) {
+    store.markAsRead(id)
+  }
 }
 
 const markAllRead = () => {
-  notifications.value.forEach(n => (n.read = true))
+  store.markAllAsRead()
+}
+
+const getIcon = (type) => {
+  switch(type?.toLowerCase()) {
+    case 'event': return '🎉'
+    case 'order': return '✓'
+    case 'promotion': return '🎁'
+    case 'security': return '🔒'
+    default: return '📢'
+  }
 }
 </script>

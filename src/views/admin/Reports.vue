@@ -76,27 +76,27 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <stat-card
         label="Total Revenue"
-        value="$245,680"
+        :value="currency(totalRevenue)"
         icon="💰"
-        trend="42"
+        :trend="revenueSummary.totalCreditsPurchased || 0"
       />
       <stat-card
-        label="User Growth"
-        value="2,450"
+        label="Credit Revenue"
+        :value="currency(revenueSummary.totalCreditRevenueETB)"
         icon="📈"
-        trend="18"
+        :trend="revenueSummary.totalCreditsPurchased || 0"
       />
       <stat-card
-        label="Event Completion"
-        value="92%"
+        label="Publish Revenue"
+        :value="currency(revenueSummary.totalPublishRevenueETB)"
         icon="✓"
-        trend="5"
+        :trend="revenueSummary.totalEventsPublished || 0"
       />
       <stat-card
-        label="Avg. Rating"
-        value="4.7"
+        label="Boost Revenue"
+        :value="currency(revenueSummary.totalBoostRevenueETB)"
         icon="⭐"
-        trend="3"
+        :trend="revenueSummary.totalEventsBoosted || 0"
       />
     </div>
 
@@ -193,37 +193,81 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import StatCard from '@/components/StatCard.vue'
+import { adminService } from '@/services/adminService'
 
 const reportType = ref('revenue')
 const dateRange = ref('month')
+const loading = ref(false)
+const revenueSummary = ref({
+  totalCreditRevenueETB: 0,
+  totalCreditsPurchased: 0,
+  totalPublishRevenueETB: 0,
+  totalBoostRevenueETB: 0,
+  totalEventsPublished: 0,
+  totalEventsBoosted: 0,
+})
+const boostAnalytics = ref([])
 
-const revenueTrend = [45, 55, 65, 58, 72, 68, 82]
+const currency = (v) => `ETB ${Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+const percent = (v) => `${Math.round(v || 0)}%`
 
-const userSources = [
-  { name: 'Organic Search', icon: '🔍', percentage: 45 },
-  { name: 'Social Media', icon: '📱', percentage: 28 },
-  { name: 'Direct', icon: '🔗', percentage: 18 },
-  { name: 'Referral', icon: '🤝', percentage: 9 },
-]
+const totalRevenue = computed(() =>
+  (revenueSummary.value.totalCreditRevenueETB || 0) +
+  (revenueSummary.value.totalPublishRevenueETB || 0) +
+  (revenueSummary.value.totalBoostRevenueETB || 0)
+)
 
-const recentReports = [
-  { id: 1, name: 'Monthly Revenue Report - March 2025', date: '2025-03-31' },
-  { id: 2, name: 'User Growth Analysis - March 2025', date: '2025-03-25' },
-  { id: 3, name: 'Event Performance Report - March 2025', date: '2025-03-20' },
-  { id: 4, name: 'Platform Health Check - March 2025', date: '2025-03-15' },
-]
+const revenueTrend = computed(() => {
+  if (!boostAnalytics.value.length) return [30, 40, 35, 45, 50, 55, 60]
+  const max = Math.max(...boostAnalytics.value.map(b => b.revenueGeneratedETB || 0), 1)
+  return boostAnalytics.value.slice(0, 7).map(b => Math.min(100, Math.round((b.revenueGeneratedETB || 0) / max * 100)))
+})
 
-const generateReport = () => {
-  console.log('[v0] Generating report:', reportType.value, dateRange.value)
+const userSources = computed(() => {
+  if (!boostAnalytics.value.length) {
+    return [
+      { name: 'Boost Level 1', icon: '⚡', percentage: 40 },
+      { name: 'Boost Level 2', icon: '⚡', percentage: 30 },
+      { name: 'Boost Level 3', icon: '⚡', percentage: 20 },
+      { name: 'Other', icon: '⚡', percentage: 10 },
+    ]
+  }
+  const max = boostAnalytics.value.reduce((sum, b) => sum + (b.totalTimesUsed || 0), 0) || 1
+  return boostAnalytics.value.slice(0, 4).map(b => ({
+    name: b.boostLevelName,
+    icon: '⚡',
+    percentage: Math.round(((b.totalTimesUsed || 0) / max) * 100)
+  }))
+})
+
+const recentReports = ref([])
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const [rev, boosts] = await Promise.all([
+      adminService.getPlatformRevenue(),
+      adminService.getBoostAnalytics(),
+    ])
+    revenueSummary.value = rev || revenueSummary.value
+    boostAnalytics.value = boosts || []
+    recentReports.value = (boosts || []).slice(0, 4).map((b, idx) => ({
+      id: b.boostLevelId || idx,
+      name: `${b.boostLevelName} analytics`,
+      date: new Date().toISOString().slice(0, 10),
+    }))
+  } catch (err) {
+    alert(err?.response?.data?.message || err.message || 'Failed to load reports')
+  } finally {
+    loading.value = false
+  }
 }
 
-const downloadReport = () => {
-  console.log('[v0] Downloading current report')
-}
+const generateReport = () => {}
+const downloadReport = () => {}
+const downloadReportFile = () => {}
 
-const downloadReportFile = (id) => {
-  console.log('[v0] Downloading report:', id)
-}
+onMounted(fetchData)
 </script>

@@ -161,6 +161,14 @@
             <td class="px-4 py-3 text-muted-foreground">
               {{ formatDate(org.createdAt) }}
             </td>
+            <td class="px-4 py-3 flex gap-2">
+              <button
+                class="btn-outline px-3 py-1 text-sm rounded-lg"
+                @click="openEventsModal(org)"
+              >
+                Events
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -196,9 +204,17 @@
           <p class="text-sm text-muted-foreground mb-3">
             {{ org.email }}
           </p>
-          <p class="text-xs text-muted-foreground">
-            Joined {{ formatDate(org.createdAt) }}
-          </p>
+          <div class="flex justify-between items-center">
+             <p class="text-xs text-muted-foreground">
+              Joined {{ formatDate(org.createdAt) }}
+            </p>
+            <button
+              class="text-xs btn-outline px-2 py-1"
+              @click="openEventsModal(org)"
+            >
+              View Events
+            </button>
+          </div>
         </div>
       </div>
 
@@ -233,12 +249,63 @@
         </button>
       </div>
     </div>
+
+    <!-- Events Modal -->
+     <div v-if="showEventsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div class="bg-card w-full max-w-5xl rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto border border-border flex flex-col">
+        <div class="p-6 border-b border-border flex justify-between items-center sticky top-0 bg-card z-10">
+          <div>
+            <h3 class="text-xl font-bold">Organizer Events</h3>
+            <p class="text-sm text-muted-foreground" v-if="selectedOrg">Events by {{ selectedOrg.fullName }}</p>
+          </div>
+          <button @click="closeEventsModal" class="p-2 hover:bg-muted rounded-full">✕</button>
+        </div>
+        
+        <div class="p-6 flex-1 overflow-auto">
+          <div v-if="eventsLoading" class="text-center py-12 text-muted-foreground">
+            Loading events...
+          </div>
+          <div v-else-if="orgEvents.length === 0" class="text-center py-12 text-muted-foreground">
+            No events found for this organizer.
+          </div>
+          <table v-else class="w-full">
+            <thead class="border-b border-border">
+              <tr>
+                <th class="text-left py-2 px-3 text-sm font-medium">Title</th>
+                <th class="text-left py-2 px-3 text-sm font-medium">Date</th>
+                <th class="text-left py-2 px-3 text-sm font-medium">Location</th>
+                 <th class="text-left py-2 px-3 text-sm font-medium">Category</th>
+                <th class="text-left py-2 px-3 text-sm font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="ev in orgEvents" :key="ev.id" class="border-b border-border/50 hover:bg-muted/30">
+                <td class="py-3 px-3 font-medium">{{ ev.title }}</td>
+                <td class="py-3 px-3 text-sm text-muted-foreground">{{ formatDate(ev.startDate) }}</td>
+                <td class="py-3 px-3 text-sm">{{ ev.locationName || 'Online' }}</td>
+                <td class="py-3 px-3 text-sm">{{ ev.categoryName }}</td>
+                <td class="py-3 px-3">
+                  <span :class="['px-2 py-0.5 rounded text-xs', ev.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700']">
+                    {{ ev.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="p-4 border-t border-border bg-muted/20 flex justify-end">
+          <button class="btn-outline px-4 py-2" @click="closeEventsModal">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAdminStore } from '../../stores/admin'
+import { adminService } from '@/services/adminService'
 
 const adminStore = useAdminStore()
 
@@ -246,6 +313,12 @@ const adminStore = useAdminStore()
 const activeFilter = ref('pending')
 const currentPage = ref(1)
 const pageSize = ref(20)
+
+// Events Modal State
+const showEventsModal = ref(false)
+const orgEvents = ref([])
+const eventsLoading = ref(false)
+const selectedOrg = ref(null)
 
 const statusFilters = [
   { label: 'Pending', value: 'pending' },
@@ -327,13 +400,40 @@ const handleReject = async (id) => {
   }
 }
 
+// Open Events Modal
+const openEventsModal = async (org) => {
+  selectedOrg.value = org
+  showEventsModal.value = true
+  eventsLoading.value = true
+  orgEvents.value = []
+  
+  try {
+    const events = await adminService.getOrganizerEvents(org.id)
+    orgEvents.value = events || []
+  } catch (err) {
+    alert('Failed to load organizer events')
+  } finally {
+    eventsLoading.value = false
+  }
+}
+
+const closeEventsModal = () => {
+  showEventsModal.value = false
+  setTimeout(() => {
+    selectedOrg.value = null
+    orgEvents.value = []
+  }, 300)
+}
+
 // Format date
-const formatDate = (dateString) => {
+const formatDate = (dateString, options = {}) => {
+  if (!dateString) return ''
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
+    ...options
   })
 }
 </script>

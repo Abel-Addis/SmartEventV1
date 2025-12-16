@@ -9,6 +9,8 @@ export const useAdminStore = defineStore("admin", () => {
   const users = ref([]);
   const events = ref([]);
   const loading = ref(false);
+  const usersLoading = ref(false); // dedicated loader for users list/filter
+  const statusLoading = ref(false); // dedicated loader for status toggle
   const error = ref(null);
 
   // Pagination state
@@ -131,7 +133,7 @@ export const useAdminStore = defineStore("admin", () => {
   }
 
   async function fetchAllUsers(params = {}) {
-    loading.value = true;
+    usersLoading.value = true;
     error.value = null;
 
     try {
@@ -150,12 +152,36 @@ export const useAdminStore = defineStore("admin", () => {
       error.value = errorMessage;
       return { success: false, message: errorMessage };
     } finally {
-      loading.value = false;
+      usersLoading.value = false;
+    }
+  }
+
+  async function searchUsers(searchParams, pageParams = {}) {
+    usersLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await adminService.searchUsers(searchParams, pageParams);
+      users.value = response.items || [];
+      usersPagination.value = {
+        totalCount: response.totalCount,
+        totalPages: response.totalPages,
+        pageNumber: response.pageNumber,
+        pageSize: response.pageSize,
+      };
+      return { success: true, data: response };
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to search users";
+      error.value = errorMessage;
+      return { success: false, message: errorMessage };
+    } finally {
+      usersLoading.value = false;
     }
   }
 
   async function updateUserStatus(userId, isActive) {
-    loading.value = true;
+    statusLoading.value = true;
     error.value = null;
 
     try {
@@ -174,7 +200,7 @@ export const useAdminStore = defineStore("admin", () => {
       error.value = errorMessage;
       return { success: false, message: errorMessage };
     } finally {
-      loading.value = false;
+      statusLoading.value = false;
     }
   }
 
@@ -203,6 +229,8 @@ export const useAdminStore = defineStore("admin", () => {
     users,
     events,
     loading,
+    usersLoading,
+    statusLoading,
     error,
     pendingOrganizersPagination,
     usersPagination,
@@ -217,6 +245,7 @@ export const useAdminStore = defineStore("admin", () => {
     approveOrganizer,
     rejectOrganizer,
     fetchAllUsers,
+    searchUsers,
     updateUserStatus,
     fetchAllEvents,
   };

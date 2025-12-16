@@ -84,13 +84,29 @@
     <!-- Results -->
     <div>
       <p class="text-sm text-muted-foreground mb-4">
-        Showing {{ filteredEvents.length }} events
+        Showing {{ events.length }} events
       </p>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <div v-if="loading" class="py-12 text-center text-muted-foreground">
+         Loading events...
+      </div>
+      
+      <div v-else-if="events.length === 0" class="py-12 text-center text-muted-foreground">
+         No events found matching criteria.
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <event-card
-          v-for="event in filteredEvents"
-          :key="event.id"
-          v-bind="event"
+          v-for="event in events"
+          :key="event.eventId"
+          :id="event.eventId"
+          :title="event.title"
+          :image="event.bannerImageUrl"
+          :date="formatDate(event.startDate)"
+          :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
+          :location="event.venue"
+          :category="event.categoryName"
+          :description="event.description || ''"
         />
       </div>
     </div>
@@ -98,8 +114,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import EventCard from '@/components/EventCard.vue'
+import { attendeeService } from '@/services/attendeeService'
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -107,21 +124,68 @@ const selectedPrice = ref('')
 const selectedDate = ref('')
 const selectedLocation = ref('')
 
-const allEvents = [
-  { id: 1, title: 'Summer Music Festival', description: 'Live music from top artists', date: 'Aug 15, 2025', price: 'From $50', category: 'music', location: 'Central Park' },
-  { id: 2, title: 'Tech Conference 2025', description: 'Latest in web development', date: 'Sep 20, 2025', price: 'From $100', category: 'tech', location: 'Convention Center' },
-  { id: 3, title: 'Jazz Night', description: 'Smooth jazz performances', date: 'Aug 25, 2025', price: 'From $30', category: 'music', location: 'Blue Note' },
-  { id: 4, title: 'Food & Wine Expo', description: 'Culinary experiences', date: 'Sep 10, 2025', price: 'From $75', category: 'food', location: 'Downtown' },
-  { id: 5, title: 'AI Workshop', description: 'Hands-on AI training', date: 'Sep 5, 2025', price: 'From $150', category: 'tech', location: 'Tech Hub' },
-  { id: 6, title: 'Business Networking', description: 'Connect with entrepreneurs', date: 'Aug 28, 2025', price: 'Free', category: 'business', location: 'Downtown' },
-]
+const events = ref([])
+const loading = ref(false)
+let debounceTimer = null
 
-const filteredEvents = computed(() => {
-  return allEvents.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesCategory = !selectedCategory.value || event.category === selectedCategory.value
-    const matchesLocation = !selectedLocation.value || event.location.toLowerCase().includes(selectedLocation.value.toLowerCase())
-    return matchesSearch && matchesCategory && matchesLocation
-  })
+onMounted(() => {
+  fetchEvents()
 })
+
+const fetchEvents = async () => {
+  loading.value = true
+  try {
+    // Parse price range
+    let minPrice = null
+    let maxPrice = null
+    if (selectedPrice.value === 'free') {
+       maxPrice = 0
+    } else if (selectedPrice.value === '0-50') {
+       maxPrice = 50
+    } else if (selectedPrice.value === '50-100') {
+       minPrice = 50
+       maxPrice = 100
+    } else if (selectedPrice.value === '100+') {
+       minPrice = 100
+    }
+
+    const payload = {
+      Keyword: searchQuery.value || null,
+      CategoryName: selectedCategory.value || null,
+      Venue: selectedLocation.value || null,
+      StartDateFrom: selectedDate.value ? new Date(selectedDate.value) : null,
+      MinPrice: minPrice,
+      MaxPrice: maxPrice,
+      PageNumber: 1,
+      PageSize: 20
+    }
+    
+    // Clean payload
+    Object.keys(payload).forEach(key => payload[key] === null && delete payload[key])
+
+    const result = await attendeeService.searchEvents(payload)
+    events.value = result.items || []
+  } catch (err) {
+    console.error("Search failed", err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Watch filters
+watch([searchQuery, selectedCategory, selectedPrice, selectedDate, selectedLocation], () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    fetchEvents()
+  }, 500)
+})
+
+const formatCurrency = (val) => {
+  return new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB' }).format(val)
+}
+
+const formatDate = (dateString) => {
+  if(!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
 </script>

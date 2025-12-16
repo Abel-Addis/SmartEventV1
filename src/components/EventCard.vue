@@ -1,5 +1,8 @@
 <template>
-  <div class="card group cursor-pointer transition-all duration-200 overflow-hidden relative">
+  <div 
+    class="card group cursor-pointer transition-all duration-200 overflow-hidden relative"
+    @click="navigateToDetails"
+  >
     <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none">
       <div class="h-full w-full bg-gradient-to-br from-accent/10 via-transparent to-primary/10 blur-3xl" />
     </div>
@@ -9,15 +12,16 @@
       class="relative h-40 rounded-2xl flex items-center justify-between mb-4 overflow-hidden border border-border bg-gradient-to-br from-secondary/80 via-card to-muted/60"
     >
       <div class="pl-4 py-3 space-y-2">
-        <span class="text-xs uppercase tracking-[0.2em] text-muted-foreground">Featured</span>
+        <span class="text-xs uppercase tracking-[0.2em] text-muted-foreground">{{ category || 'Featured' }}</span>
         <div class="flex items-center gap-2 text-sm text-muted-foreground">
           <span class="opacity-70">📅</span>
           <span class="font-semibold text-foreground">{{ date }}</span>
         </div>
       </div>
-      <div class="h-full aspect-square flex items-center justify-center bg-gradient-to-tl from-accent/30 to-primary/20">
+      <div v-if="!image" class="h-full aspect-square flex items-center justify-center bg-gradient-to-tl from-accent/30 to-primary/20">
         <span class="text-5xl opacity-80 mr-4">🎉</span>
       </div>
+      <img v-else :src="image" class="absolute inset-0 w-full h-full object-cover opacity-50" />
       <div class="absolute inset-0 bg-gradient-to-t from-card/70 to-transparent" />
     </div>
 
@@ -50,10 +54,24 @@
 </template>
 
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
+  id: [String, Number],
   title: String,
   description: String,
   date: String,
   price: String,
+  image: String,
+  location: String,
+  category: String
 })
+
+const router = useRouter()
+
+const navigateToDetails = () => {
+  if (props.id) {
+    router.push(`/dashboard/events/${props.id}`)
+  }
+}
 </script>

@@ -12,7 +12,7 @@
       </div>
       <button
         class="btn-primary px-6 py-2"
-        @click="showAddCategory = true"
+        @click="openAddModal"
       >
         Add Category
       </button>
@@ -41,17 +41,20 @@
         </p>
         <div class="flex gap-2">
           <button
+            v-if="!category.isDefault"
             class="btn-outline px-3 py-1 text-sm flex-1"
             @click="editCategory(category.id)"
           >
             Edit
           </button>
           <button
+            v-if="!category.isDefault"
             class="btn-outline px-3 py-1 text-sm flex-1 hover:bg-muted text-foreground"
             @click="deleteCategory(category.id)"
           >
             Delete
           </button>
+          <span v-else class="text-xs text-muted-foreground">Default category</span>
         </div>
       </div>
     </div>
@@ -122,49 +125,137 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { categoryService } from '@/services/categoryService'
 
 const showAddCategory = ref(false)
 const editingId = ref(null)
+const loading = ref(false)
+const saving = ref(false)
+const categories = ref([])
 const newCategory = ref({ name: '', icon: '', description: '' })
 
-const categories = ref([
-  { id: 1, name: 'Music', icon: '🎵', events: 245, description: 'Live concerts, DJ nights, and music festivals' },
-  { id: 2, name: 'Sports', icon: '⚽', events: 189, description: 'Sporting events and tournaments' },
-  { id: 3, name: 'Technology', icon: '💻', events: 156, description: 'Tech talks, conferences, and workshops' },
-  { id: 4, name: 'Arts & Culture', icon: '🎨', events: 134, description: 'Art exhibitions and cultural events' },
-  { id: 5, name: 'Food & Wine', icon: '🍷', events: 98, description: 'Culinary events and tastings' },
-  { id: 6, name: 'Business', icon: '💼', events: 87, description: 'Networking and business events' },
+// Default/system categories from backend seeder (case-insensitive match)
+const defaultCategoryNames = new Set([
+  'music','theater & plays','comedy','film & cinema','art exhibition',
+  'conference','workshop','seminar','networking','trade show',
+  'sports','marathon & racing','fitness class','outdoor adventure',
+  'food festival','wine tasting','cooking class',
+  'tech meetup','webinar','startup pitch',
+  'university lecture','book reading','language exchange',
+  'festival','charity & fundraiser','volunteering','religious & spiritual',
+  'kids activities','educational kids',
+  'wellness retreat','health seminar',
+  'club night','karaoke',
+  'gaming tournament','board games','photography','gardening'
 ])
+
+const resetForm = () => {
+  newCategory.value = { name: '', icon: '', description: '' }
+  editingId.value = null
+}
+
+const openAddModal = () => {
+  resetForm()
+  showAddCategory.value = true
+}
+
+const defaultIcon = (name = '') => {
+  if (newCategory.value.icon) return newCategory.value.icon
+  return '📂'
+}
+
+const fetchCategories = async () => {
+  loading.value = true
+  try {
+    const data = await categoryService.getAllCategories()
+    categories.value = (data || []).map(c => ({
+      id: c.id,
+      name: c.name,
+      description: c.description || 'No description provided',
+      icon: '📂', // backend does not store icon; keep UI consistent
+      events: c.events || 0,
+      isDefault: c.name ? defaultCategoryNames.has(c.name.toLowerCase()) : false,
+    }))
+  } catch (err) {
+    alert(err.response?.data?.message || err.message || 'Failed to load categories')
+  } finally {
+    loading.value = false
+  }
+}
 
 const editCategory = (id) => {
   const category = categories.value.find(c => c.id === id)
   if (category) {
-    newCategory.value = { ...category }
+    if (category.isDefault) {
+      alert('Default categories cannot be edited.')
+      return
+    }
+    newCategory.value = { name: category.name, icon: category.icon, description: category.description }
     editingId.value = id
     showAddCategory.value = true
   }
 }
 
-const deleteCategory = (id) => {
-  categories.value = categories.value.filter(c => c.id !== id)
+const deleteCategory = async (id) => {
+  const confirmed = confirm('Are you sure you want to delete this category?')
+  if (!confirmed) return
+
+  try {
+    const category = categories.value.find(c => c.id === id)
+    if (category?.isDefault) {
+      alert('Default categories cannot be deleted.')
+      return
+    }
+    saving.value = true
+    await categoryService.deleteCategory(id)
+    categories.value = categories.value.filter(c => c.id !== id)
+    alert('Category deleted successfully')
+  } catch (err) {
+    alert(err.response?.data?.message || err.message || 'Failed to delete category')
+  } finally {
+    saving.value = false
+  }
 }
 
-const saveCategory = () => {
-  if (editingId.value) {
-    const index = categories.value.findIndex(c => c.id === editingId.value)
-    if (index !== -1) {
-      categories.value[index] = { ...categories.value[index], ...newCategory.value }
-    }
-    editingId.value = null
-  } else {
-    categories.value.push({
-      id: Math.max(...categories.value.map(c => c.id), 0) + 1,
-      ...newCategory.value,
-      events: 0,
-    })
+const saveCategory = async () => {
+  if (!newCategory.value.name?.trim()) {
+    alert('Category name is required')
+    return
   }
-  newCategory.value = { name: '', icon: '', description: '' }
-  showAddCategory.value = false
+
+  const payload = {
+    name: newCategory.value.name.trim(),
+    description: newCategory.value.description?.trim() || '',
+  }
+
+  try {
+    saving.value = true
+    if (editingId.value) {
+      const updated = await categoryService.updateCategory(editingId.value, payload)
+      categories.value = categories.value.map(c =>
+        c.id === editingId.value ? { ...c, ...updated, icon: newCategory.value.icon || c.icon, description: updated.description || c.description } : c
+      )
+      alert('Category updated successfully')
+    } else {
+      const created = await categoryService.addCategory(payload)
+      categories.value.push({
+        id: created.id,
+        name: created.name,
+        description: created.description || '',
+        icon: newCategory.value.icon || defaultIcon(created.name),
+        events: 0,
+      })
+      alert('Category added successfully')
+    }
+    resetForm()
+    showAddCategory.value = false
+  } catch (err) {
+    alert(err.response?.data?.message || err.message || 'Failed to save category')
+  } finally {
+    saving.value = false
+  }
 }
+
+onMounted(fetchCategories)
 </script>

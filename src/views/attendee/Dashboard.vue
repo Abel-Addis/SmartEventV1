@@ -26,83 +26,204 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <stat-card
         label="Upcoming Events"
-        value="5"
+        :value="upcomingCount.toString()"
         icon="🎪"
-        trend="12"
       />
       <stat-card
-        label="Favorite Events"
-        value="12"
-        icon="❤️"
-        trend="8"
+        label="My Tickets"
+        :value="ticketsCount.toString()"
+        icon="🎟️"
       />
       <stat-card
         label="Total Spent"
-        value="$245"
+        :value="formatCurrency(totalSpent.toString())"
         icon="💰"
-        trend="25"
       />
       <stat-card
         label="Events Attended"
-        value="8"
+        :value="attendedCount.toString()"
         icon="✓"
-        trend="0"
       />
     </div>
 
-    <!-- Upcoming Events Section -->
-    <div>
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-h3 font-bold">
-          Upcoming Events
-        </h3>
-        <router-link
-          to="/dashboard/events"
-          class="text-primary hover:underline text-sm font-medium"
-        >
-          View All
-        </router-link>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <event-card
-          v-for="event in upcomingEvents"
-          :key="event.id"
-          v-bind="event"
+    <!-- Search Section -->
+    <div class="space-y-4">
+       <div class="relative">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search events by name, venue, or keyword..."
+          class="w-full px-4 py-3 rounded-xl border border-border bg-card shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          @keyup.enter="handleSearch"
         />
+        <button 
+          @click="handleSearch"
+          class="absolute right-2 top-2 btn-primary px-4 py-1"
+          :disabled="searching"
+        >
+          {{ searching ? 'Searching...' : 'Search' }}
+        </button>
+      </div>
+      
+      <!-- Search Results -->
+      <div v-if="searchResults" class="space-y-4">
+        <div class="flex items-center justify-between">
+           <h3 class="text-h3 font-bold">Search Results</h3>
+           <button @click="clearSearch" class="text-sm text-muted-foreground hover:text-primary">Clear Search</button>
+        </div>
+        <div v-if="searchResults.length === 0" class="text-center py-8 text-muted-foreground">
+          No events found matching your search.
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <event-card
+            v-for="event in searchResults"
+            :key="event.eventId"
+            :id="event.eventId"
+            :title="event.title"
+             image="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80" 
+            :date="formatDate(event.startDate)"
+            :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
+            :location="event.venue"
+            :category="event.categoryName"
+          />
+        </div>
       </div>
     </div>
 
-    <!-- Recommendations Section -->
-    <div>
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-h3 font-bold">
-          Recommended For You
-        </h3>
+    <!-- Main Content (Hidden if searching) -->
+    <div v-if="!searchResults" class="space-y-8">
+      <!-- Upcoming Events Section -->
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-h3 font-bold">
+            Upcoming Events
+          </h3>
+          <router-link
+            to="/dashboard/events"
+            class="text-primary hover:underline text-sm font-medium"
+          >
+            maybe later
+          </router-link>
+        </div>
+        <p v-if="loading" class="text-muted-foreground">Loading events...</p>
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <event-card
+            v-for="event in upcomingEvents"
+            :key="event.eventId"
+             :id="event.eventId"
+            :title="event.title"
+            image="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80"
+            :date="formatDate(event.startDate)"
+             :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
+             :location="event.venue"
+             :category="event.categoryName"
+          />
+        </div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <event-card
-          v-for="event in recommendedEvents"
-          :key="event.id"
-          v-bind="event"
-        />
+
+      <!-- Active / Recommended Section -->
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-h3 font-bold">
+            Active & Trending
+          </h3>
+        </div>
+        <p v-if="loading" class="text-muted-foreground">Loading active events...</p>
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <event-card
+            v-for="event in activeEvents"
+            :key="event.eventId"
+             :id="event.eventId"
+            :title="event.title"
+            image="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80"
+            :date="formatDate(event.startDate)"
+             :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
+             :location="event.venue"
+             :category="event.categoryName"
+          />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import StatCard from '@/components/StatCard.vue'
-import EventCard from '@/components/EventCard.vue'
+import { ref, onMounted, computed } from 'vue'
+import StatCard from '../../components/StatCard.vue'
+import EventCard from '../../components/EventCard.vue'
+import { attendeeService } from '../../services/attendeeService'
 
-const upcomingEvents = [
-  { id: 1, title: 'Summer Music Festival', description: 'Live music from top artists', date: 'Aug 15, 2025', price: 'From $50' },
-  { id: 2, title: 'Tech Conference 2025', description: 'Latest in web development', date: 'Sep 20, 2025', price: 'From $100' },
-  { id: 3, title: 'Jazz Night', description: 'Smooth jazz performances', date: 'Aug 25, 2025', price: 'From $30' },
-]
+const upcomingEvents = ref([])
+const activeEvents = ref([])
+const searchResults = ref(null)
+const searchQuery = ref('')
+const loading = ref(true)
+const searching = ref(false)
 
-const recommendedEvents = [
-  { id: 4, title: 'Food & Wine Expo', description: 'Culinary experiences', date: 'Sep 10, 2025', price: 'From $75' },
-  { id: 5, title: 'AI Workshop', description: 'Hands-on AI training', date: 'Sep 5, 2025', price: 'From $150' },
-  { id: 6, title: 'Art Exhibition', description: 'Contemporary art showcase', date: 'Aug 30, 2025', price: 'Free' },
-]
+// Stats
+const myBookings = ref([])
+
+const upcomingCount = computed(() => upcomingEvents.value?.length || 0) // Approximation or fetch real count
+const ticketsCount = computed(() => myBookings.value?.filter(b => b.paymentStatus === 'Paid').length || 0)
+const totalSpent = computed(() => myBookings.value?.filter(b => b.paymentStatus === 'Paid').reduce((sum, b) => sum + b.totalAmount, 0) || 0)
+const attendedCount = computed(() => myBookings.value?.filter(b => b.bookingStatus === 'Attended' || (b.eventEnded && b.paymentStatus === 'Paid')).length || 0)
+
+onMounted(async () => {
+  await loadDashboard()
+})
+
+const loadDashboard = async () => {
+  loading.value = true
+  try {
+    const [upcoming, active, bookings] = await Promise.all([
+      attendeeService.getUpcomingEvents({ pageSize: 3 }),
+      attendeeService.getActiveEvents({ pageSize: 3 }),
+      attendeeService.getMyBookings().catch(() => []) // Silently fail bookings if not auth or error
+    ])
+    
+    // API returns PaginatedResult { items: [], ... }
+    upcomingEvents.value = upcoming.items || []
+    activeEvents.value = active.items || []
+    myBookings.value = bookings || []
+  } catch (err) {
+    console.error("Failed to load dashboard", err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleSearch = async () => {
+  if (!searchQuery.value.trim()) {
+    clearSearch()
+    return
+  }
+  
+  searching.value = true
+  try {
+    const result = await attendeeService.searchEvents({ 
+      Keyword: searchQuery.value,
+      PageNumber: 1,
+      PageSize: 10 
+    })
+    searchResults.value = result.items || []
+  } catch (err) {
+    alert("Search failed")
+  } finally {
+    searching.value = false
+  }
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  searchResults.value = null
+}
+
+const formatCurrency = (val) => {
+  return new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB' }).format(val)
+}
+
+const formatDate = (dateString) => {
+  if(!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
 </script>
