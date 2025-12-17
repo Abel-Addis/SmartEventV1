@@ -57,6 +57,11 @@ export const attendeeService = {
     return result.data;
   },
 
+  async getTicketsForBooking(bookingId) {
+    const result = await apiClient.get(`/bookings/tickets/${bookingId}`);
+    return result.data;
+  },
+
   // --- Payment ---
 
   async initPayment(bookingId) {

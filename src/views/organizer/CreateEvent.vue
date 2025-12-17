@@ -223,68 +223,74 @@
       <div v-for="(ticket, idx) in savedTickets" :key="ticket.id" class="border border-border p-4 rounded-lg space-y-4">
         <h3 class="font-semibold">{{ ticket.name }} - ${{ ticket.basePrice }}</h3>
 
-        <div>
-          <label class="block text-sm font-medium mb-2">Pricing Rule Type</label>
-          <select v-model="pricingRules[ticket.id].ruleType" class="input-field w-full">
-            <option value="None">No Pricing Rule</option>
-            <option value="EarlyBird">Early Bird Discount</option>
-            <option value="LastMinute">Last Minute Discount</option>
-            <option value="DemandBased">Demand Based Pricing</option>
-          </select>
-        </div>
+        <div v-for="(rule, rIdx) in pricingRules[ticket.id]" :key="rIdx" class="p-4 bg-muted/20 rounded-lg relative">
+            <button v-if="pricingRules[ticket.id].length > 0" type="button" 
+                class="absolute top-2 right-2 text-destructive text-xs hover:underline"
+                @click="removePricingRuleFromTicket(ticket.id, rIdx)">
+                Remove Info
+            </button>
 
-        <!-- Early Bird Fields -->
-        <div v-if="pricingRules[ticket.id].ruleType === 'EarlyBird'" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Start Date *</label>
-              <input v-model="pricingRules[ticket.id].startDate" type="datetime-local" class="input-field w-full">
+            <div class="mb-3">
+              <label class="block text-sm font-medium mb-1">Rule Type</label>
+              <select v-model="rule.ruleType" class="input-field w-full">
+                <option value="None">Select Rule Type</option>
+                <option value="EarlyBird">Early Bird Discount</option>
+                <option value="LastMinute">Last Minute Discount</option>
+                <option value="DemandBased">Demand Based Pricing</option>
+              </select>
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">End Date *</label>
-              <input v-model="pricingRules[ticket.id].endDate" type="datetime-local" class="input-field w-full">
+
+            <!-- Early Bird Fields -->
+            <div v-if="rule.ruleType === 'EarlyBird'" class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2">Start Date *</label>
+                  <input v-model="rule.startDate" type="datetime-local" class="input-field w-full">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">End Date *</label>
+                  <input v-model="rule.endDate" type="datetime-local" class="input-field w-full">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Discount Percent *</label>
+                <input v-model="rule.discountPercent" type="number" step="0.01" placeholder="e.g., 20" class="input-field w-full">
+              </div>
             </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-2">Discount Percent *</label>
-            <input v-model="pricingRules[ticket.id].discountPercent" type="number" step="0.01" placeholder="e.g., 20"
-              class="input-field w-full">
-          </div>
+
+            <!-- Last Minute Fields -->
+            <div v-if="rule.ruleType === 'LastMinute'" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Last N Days Before Event *</label>
+                <input v-model="rule.lastNDaysBeforeEvent" type="number" placeholder="e.g., 3" class="input-field w-full">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Discount Percent *</label>
+                <input v-model="rule.discountPercent" type="number" step="0.01" placeholder="e.g., 15" class="input-field w-full">
+              </div>
+            </div>
+
+            <!-- Demand Based Fields -->
+            <div v-if="rule.ruleType === 'DemandBased'" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Threshold Percentage *</label>
+                <input v-model="rule.thresholdPercentage" type="number" placeholder="e.g., 70 (after 70% sold)" class="input-field w-full">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Price Increase Percent *</label>
+                <input v-model="rule.priceIncreasePercent" type="number" step="0.01" placeholder="e.g., 15" class="input-field w-full">
+              </div>
+            </div>
+
+            <div v-if="rule.ruleType !== 'None'" class="mt-3">
+              <label class="block text-sm font-medium mb-1">Description</label>
+              <textarea v-model="rule.description" rows="2" placeholder="Describe this pricing rule..." class="input-field w-full" />
+            </div>
         </div>
 
-        <!-- Last Minute Fields -->
-        <div v-if="pricingRules[ticket.id].ruleType === 'LastMinute'" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-2">Last N Days Before Event *</label>
-            <input v-model="pricingRules[ticket.id].lastNDaysBeforeEvent" type="number" placeholder="e.g., 3"
-              class="input-field w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-2">Discount Percent *</label>
-            <input v-model="pricingRules[ticket.id].discountPercent" type="number" step="0.01" placeholder="e.g., 15"
-              class="input-field w-full">
-          </div>
-        </div>
-
-        <!-- Demand Based Fields -->
-        <div v-if="pricingRules[ticket.id].ruleType === 'DemandBased'" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-2">Threshold Percentage *</label>
-            <input v-model="pricingRules[ticket.id].thresholdPercentage" type="number"
-              placeholder="e.g., 70 (after 70% sold)" class="input-field w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-2">Price Increase Percent *</label>
-            <input v-model="pricingRules[ticket.id].priceIncreasePercent" type="number" step="0.01"
-              placeholder="e.g., 15" class="input-field w-full">
-          </div>
-        </div>
-
-        <div v-if="pricingRules[ticket.id].ruleType !== 'None'">
-          <label class="block text-sm font-medium mb-2">Description</label>
-          <textarea v-model="pricingRules[ticket.id].description" rows="2" placeholder="Describe this pricing rule..."
-            class="input-field w-full" />
-        </div>
+        <button type="button" class="text-indigo-600 text-sm font-medium hover:underline flex items-center gap-1" @click="addPricingRuleToTicket(ticket.id)">
+            + Add Pricing Rule
+        </button>
       </div>
 
       <div class="flex gap-3">
@@ -342,9 +348,11 @@
               <p class="text-sm text-muted-foreground">{{ ticket.description }}</p>
               <p class="text-xs text-muted-foreground mt-1">Quantity: {{ ticket.quantity }}</p>
 
-              <div v-if="pricingRules[ticket.id]?.ruleType !== 'None'" class="mt-2 pt-2 border-t border-border">
-                <p class="text-xs font-medium">Pricing Rule: {{ pricingRules[ticket.id].ruleType }}</p>
-                <p class="text-xs text-muted-foreground">{{ pricingRules[ticket.id].description }}</p>
+              <div v-if="pricingRules[ticket.id] && pricingRules[ticket.id].length > 0" class="mt-2 pt-2 border-t border-border">
+                <div v-for="(rule, rIdx) in pricingRules[ticket.id]" :key="rIdx" class="mb-2">
+                    <p v-if="rule.ruleType !== 'None'" class="text-xs font-medium">Rule: {{ rule.ruleType }}</p>
+                    <p v-if="rule.ruleType !== 'None'" class="text-xs text-muted-foreground">{{ rule.description }}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -552,20 +560,12 @@ const saveTickets = async () => {
     savedTickets.value = results.map(r => r.ticket)
     console.log("savedTickets.value", savedTickets.value);
 
-    // Initialize pricing rules for each ticket
+    // Initialize pricing rules for each ticket as array
     savedTickets.value.forEach(ticket => {
       console.log("ticket from savedTickets.value", ticket);
-
-      pricingRules.value[ticket.id] = {
-        ruleType: 'None',
-        description: '',
-        startDate: '',
-        endDate: '',
-        discountPercent: 0,
-        lastNDaysBeforeEvent: 0,
-        thresholdPercentage: 0,
-        priceIncreasePercent: 0
-      }
+      // Start with one empty rule for convenience
+      pricingRules.value[ticket.id] = []
+      addPricingRuleToTicket(ticket.id)
     })
 
     currentStep.value = 3
@@ -576,6 +576,25 @@ const saveTickets = async () => {
   }
 }
 
+// Pricing Rule Management
+const addPricingRuleToTicket = (ticketId) => {
+    if (!pricingRules.value[ticketId]) pricingRules.value[ticketId] = []
+    pricingRules.value[ticketId].push({
+        ruleType: 'None',
+        description: '',
+        startDate: '',
+        endDate: '',
+        discountPercent: 0,
+        lastNDaysBeforeEvent: 0,
+        thresholdPercentage: 0,
+        priceIncreasePercent: 0
+    })
+}
+
+const removePricingRuleFromTicket = (ticketId, index) => {
+    pricingRules.value[ticketId].splice(index, 1)
+}
+
 // Step 3: Save pricing rules
 const savePricingRules = async () => {
   loading.value = true
@@ -584,31 +603,33 @@ const savePricingRules = async () => {
   try {
     const rulePromises = []
     console.log("pricingRules.value", pricingRules.value);
+    
+    // Iterate over tickets
     for (const ticketId in pricingRules.value) {
-      const rule = pricingRules.value[ticketId]
-      console.log("rule", rule);
-      console.log("ticketId", ticketId);
+      const rules = pricingRules.value[ticketId]
+      
+      // Iterate over rules for this ticket
+      for (const rule of rules) {
+        if (rule.ruleType !== 'None') {
+            const ruleData = {
+            RuleType: rule.ruleType,
+            Description: rule.description
+            }
 
+            if (rule.ruleType === 'EarlyBird') {
+            ruleData.StartDate = new Date(rule.startDate).toISOString()
+            ruleData.EndDate = new Date(rule.endDate).toISOString()
+            ruleData.DiscountPercent = parseFloat(rule.discountPercent)
+            } else if (rule.ruleType === 'LastMinute') {
+            ruleData.LastNDaysBeforeEvent = parseInt(rule.lastNDaysBeforeEvent)
+            ruleData.DiscountPercent = parseFloat(rule.discountPercent)
+            } else if (rule.ruleType === 'DemandBased') {
+            ruleData.ThresholdPercentage = parseInt(rule.thresholdPercentage)
+            ruleData.PriceIncreasePercent = parseFloat(rule.priceIncreasePercent)
+            }
 
-      if (rule.ruleType !== 'None') {
-        const ruleData = {
-          RuleType: rule.ruleType,
-          Description: rule.description
+            rulePromises.push(eventStore.addPricingRule(ticketId, ruleData))
         }
-
-        if (rule.ruleType === 'EarlyBird') {
-          ruleData.StartDate = new Date(rule.startDate).toISOString()
-          ruleData.EndDate = new Date(rule.endDate).toISOString()
-          ruleData.DiscountPercent = parseFloat(rule.discountPercent)
-        } else if (rule.ruleType === 'LastMinute') {
-          ruleData.LastNDaysBeforeEvent = parseInt(rule.lastNDaysBeforeEvent)
-          ruleData.DiscountPercent = parseFloat(rule.discountPercent)
-        } else if (rule.ruleType === 'DemandBased') {
-          ruleData.ThresholdPercentage = parseInt(rule.thresholdPercentage)
-          ruleData.PriceIncreasePercent = parseFloat(rule.priceIncreasePercent)
-        }
-
-        rulePromises.push(eventStore.addPricingRule(ticketId, ruleData))
       }
     }
 
