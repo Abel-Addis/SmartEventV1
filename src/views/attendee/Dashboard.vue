@@ -80,7 +80,7 @@
             :key="event.eventId"
             :id="event.eventId"
             :title="event.title"
-             image="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80" 
+            :image="event.bannerImageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80'"
             :date="formatDate(event.startDate)"
             :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
             :location="event.venue"
@@ -92,6 +92,29 @@
 
     <!-- Main Content (Hidden if searching) -->
     <div v-if="!searchResults" class="space-y-8">
+      
+      <!-- Recommended Events Section -->
+      <div v-if="recommendedEvents.length > 0">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-h3 font-bold">
+            Recommended For You
+          </h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <event-card
+            v-for="event in recommendedEvents"
+            :key="event.eventId"
+            :id="event.eventId"
+            :title="event.title"
+            :image="event.bannerImageUrl || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80'"
+            :date="formatDate(event.startDate)"
+            :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
+            :location="event.venue"
+            :category="event.categoryName"
+          />
+        </div>
+      </div>
+
       <!-- Upcoming Events Section -->
       <div>
         <div class="flex items-center justify-between mb-6">
@@ -102,7 +125,7 @@
             to="/dashboard/events"
             class="text-primary hover:underline text-sm font-medium"
           >
-            maybe later
+            See all
           </router-link>
         </div>
         <p v-if="loading" class="text-muted-foreground">Loading events...</p>
@@ -110,18 +133,18 @@
           <event-card
             v-for="event in upcomingEvents"
             :key="event.eventId"
-             :id="event.eventId"
+            :id="event.eventId"
             :title="event.title"
-            image="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80"
+            :image="event.bannerImageUrl || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80'"
             :date="formatDate(event.startDate)"
-             :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
-             :location="event.venue"
-             :category="event.categoryName"
+            :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
+            :location="event.venue"
+            :category="event.categoryName"
           />
         </div>
       </div>
 
-      <!-- Active / Recommended Section -->
+      <!-- Active / Trending Section -->
       <div>
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-h3 font-bold">
@@ -133,13 +156,13 @@
           <event-card
             v-for="event in activeEvents"
             :key="event.eventId"
-             :id="event.eventId"
+            :id="event.eventId"
             :title="event.title"
-            image="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80"
+            :image="event.bannerImageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80'"
             :date="formatDate(event.startDate)"
-             :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
-             :location="event.venue"
-             :category="event.categoryName"
+            :price="event.lowestTicketPrice > 0 ? `From ${formatCurrency(event.lowestTicketPrice)}` : 'Free'"
+            :location="event.venue"
+            :category="event.categoryName"
           />
         </div>
       </div>
@@ -155,6 +178,7 @@ import { attendeeService } from '../../services/attendeeService'
 
 const upcomingEvents = ref([])
 const activeEvents = ref([])
+const recommendedEvents = ref([])
 const searchResults = ref(null)
 const searchQuery = ref('')
 const loading = ref(true)
@@ -163,7 +187,7 @@ const searching = ref(false)
 // Stats
 const myBookings = ref([])
 
-const upcomingCount = computed(() => upcomingEvents.value?.length || 0) // Approximation or fetch real count
+const upcomingCount = computed(() => upcomingEvents.value?.length || 0)
 const ticketsCount = computed(() => myBookings.value?.filter(b => b.paymentStatus === 'Paid').length || 0)
 const totalSpent = computed(() => myBookings.value?.filter(b => b.paymentStatus === 'Paid').reduce((sum, b) => sum + b.totalAmount, 0) || 0)
 const attendedCount = computed(() => myBookings.value?.filter(b => b.bookingStatus === 'Attended' || (b.eventEnded && b.paymentStatus === 'Paid')).length || 0)
@@ -175,15 +199,16 @@ onMounted(async () => {
 const loadDashboard = async () => {
   loading.value = true
   try {
-    const [upcoming, active, bookings] = await Promise.all([
+    const [upcoming, active, recommended, bookings] = await Promise.all([
       attendeeService.getUpcomingEvents({ pageSize: 3 }),
       attendeeService.getActiveEvents({ pageSize: 3 }),
-      attendeeService.getMyBookings().catch(() => []) // Silently fail bookings if not auth or error
+      attendeeService.getRecommendations().catch(() => []), 
+      attendeeService.getMyBookings().catch(() => [])
     ])
     
-    // API returns PaginatedResult { items: [], ... }
     upcomingEvents.value = upcoming.items || []
     activeEvents.value = active.items || []
+    recommendedEvents.value = recommended || []
     myBookings.value = bookings || []
   } catch (err) {
     console.error("Failed to load dashboard", err)

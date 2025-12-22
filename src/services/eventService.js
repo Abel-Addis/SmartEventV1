@@ -147,6 +147,15 @@ export const eventService = {
   },
 
   /**
+   * Get organizer's dashboard events
+   * @returns {Promise}
+   */
+  async getOrganizerDashboardEvents() {
+    const response = await apiClient.get('/organizer/dashboard/my-events')
+    return response.data
+  },
+
+  /**
    * Get default ticket types
    * @returns {Promise}
    */

@@ -29,6 +29,7 @@
         <nav-item to="/organizer/gate-persons" icon="🚪" label="Gate Persons" />
         <nav-item to="/organizer/finance" icon="💰" label="Finance" />
         <nav-item to="/organizer/credits" icon="💎" label="Credits" />
+        <nav-item to="/organizer/boosts" icon="🚀" label="Boosts" />
       </nav>
 
       <div class="p-4 border-t border-sidebar-border">

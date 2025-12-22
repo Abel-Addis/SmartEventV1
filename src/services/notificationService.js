@@ -1,31 +1,30 @@
-import apiClient from "./api";
+import apiClient from './api'
 
 export const notificationService = {
   /**
-   * Get all notifications for the authenticated user
-   * @returns {Promise} Response with notifications array
+   * Send notification to all attendees of an event
+   * @param {Object} payload - { eventId: string, title: string, message: string }
+   * @returns {Promise}
+   */
+  async sendEventNotification(payload) {
+    const response = await apiClient.post('/organizer/notifications/event', payload)
+    return response.data
+  },
+
+  /**
+   * Get current user's notifications
+   * @returns {Promise<Array>}
    */
   async getUserNotifications() {
-    const response = await apiClient.get("/Notification/user");
-    return response.data;
+    const response = await apiClient.get('/Notification/user')
+    return response.data
   },
 
   /**
-   * Mark a notification as read
-   * @param {string} id - Notification ID (GUID)
-   * @returns {Promise} Response confirming the action
+   * Mark notification as read
+   * @param {string} id 
    */
   async markAsRead(id) {
-    const response = await apiClient.post(`/Notification/${id}/read`);
-    return response.data;
-  },
-
-  /**
-   * Send a test notification (for testing purposes)
-   * @returns {Promise} Response confirming the test notification was sent
-   */
-  async sendTestNotification() {
-    const response = await apiClient.post("/Notification/test");
-    return response.data;
-  },
-};
+    await apiClient.post(`/Notification/${id}/read`)
+  }
+}

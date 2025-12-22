@@ -301,7 +301,7 @@
                   <span class="font-medium">{{ count }}</span>
                 </div>
                 <div class="h-2 bg-muted rounded-full overflow-hidden">
-                  <div class="h-full bg-blue-500" :style="{ width: '50%' }"></div> <!-- Visual placeholder as relative max unknown -->
+                  <div class="h-full bg-blue-500" :style="{ width: '50%' }"></div>
                 </div>
               </div>
                <div v-if="!metrics?.topEvents || Object.keys(metrics.topEvents).length === 0" class="text-sm text-muted-foreground">
@@ -310,6 +310,126 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    
+    <!-- System Health -->
+    <div
+      v-if="selectedTab === 'health'"
+      class="space-y-6"
+    >
+      <div v-if="healthLoading" class="text-center py-12 text-muted-foreground">
+        Checking system health...
+      </div>
+      <div v-else-if="healthData" class="space-y-6">
+         <!-- Overall Status Cards -->
+         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Database -->
+            <div class="card p-4 border-l-4" :class="healthData.Database?.status === 'Healthy' ? 'border-green-500' : 'border-red-500'">
+                <div class="flex justify-between items-start">
+                   <div>
+                      <h4 class="font-bold">Database</h4>
+                      <p class="text-sm text-muted-foreground">{{ healthData.Database?.status }}</p>
+                   </div>
+                   <span class="text-2xl">{{ healthData.Database?.status === 'Healthy' ? '🗄️' : '⚠️' }}</span>
+                </div>
+                <p v-if="healthData.Database?.responseTimeMs" class="text-xs mt-2">Response: {{ healthData.Database.responseTimeMs }}ms</p>
+                <p v-if="healthData.Database?.error" class="text-xs text-red-600 mt-2">{{ healthData.Database.error }}</p>
+            </div>
+
+            <!-- API Performance -->
+            <div class="card p-4 border-l-4 border-blue-500">
+               <div class="flex justify-between items-start">
+                   <div>
+                      <h4 class="font-bold">API Performance</h4>
+                      <p class="text-sm text-muted-foreground">Avg Response</p>
+                   </div>
+                   <span class="text-2xl">⚡</span>
+                </div>
+                 <p class="text-2xl font-bold mt-1">{{ healthData.ApiResponseTime?.lastAverageMs || 0 }}ms</p>
+            </div>
+
+            <!-- System Resources -->
+            <div class="card p-4 border-l-4 border-purple-500">
+               <div class="flex justify-between items-start">
+                   <div>
+                      <h4 class="font-bold">System Status</h4>
+                      <p class="text-sm text-muted-foreground">Uptime: {{ (healthData.System?.uptimeMinutes || 0).toFixed(0) }}m</p>
+                   </div>
+                   <span class="text-2xl">🖥️</span>
+                </div>
+                <p class="text-xs mt-2">Memory: {{ healthData.System?.memoryMB }}MB</p>
+                <p class="text-xs">Cores: {{ healthData.System?.cpuCores }}</p>
+            </div>
+         </div>
+
+         <!-- Services Grid -->
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- External Services -->
+            <div class="card p-6">
+               <h3 class="font-bold mb-4">External Services</h3>
+               <div class="space-y-4">
+                  <!-- Cloudinary -->
+                  <div class="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                     <div class="flex items-center gap-3">
+                        <span class="text-xl">☁️</span>
+                        <div>
+                           <p class="font-medium">Cloudinary</p>
+                           <p class="text-xs text-muted-foreground">File Storage</p>
+                        </div>
+                     </div>
+                     <div class="text-right">
+                        <span 
+                           class="px-2 py-1 rounded-full text-xs font-bold"
+                           :class="(healthData['Cloudinary-File-Upload'] || healthData.Cloudinary)?.status === 'Healthy' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                        >
+                           {{ (healthData['Cloudinary-File-Upload'] || healthData.Cloudinary)?.status }}
+                        </span>
+                     </div>
+                  </div>
+
+                   <!-- Payment Service -->
+                   <div class="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                     <div class="flex items-center gap-3">
+                        <span class="text-xl">💳</span>
+                        <div>
+                           <p class="font-medium">Payment Service</p>
+                           <p class="text-xs text-muted-foreground">Chapa Gateway</p>
+                        </div>
+                     </div>
+                     <div class="text-right">
+                        <span 
+                           class="px-2 py-1 rounded-full text-xs font-bold"
+                           :class="healthData.PaymentService?.status === 'Healthy' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                        >
+                           {{ healthData.PaymentService?.status }}
+                        </span>
+                        <p v-if="healthData.PaymentService?.statusCode" class="text-[10px] text-muted-foreground mt-1">Status: {{ healthData.PaymentService.statusCode }}</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- Background Services -->
+            <div class="card p-6">
+               <h3 class="font-bold mb-4">Background Services</h3>
+               <div class="space-y-4">
+                   <div class="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <span class="font-medium">Job Queue</span>
+                      <span class="font-mono bg-background px-2 py-1 rounded border">{{ healthData.BackgroundQueue?.pending || 0 }} Pending</span>
+                   </div>
+                   
+                   <div v-for="(svc, idx) in healthData.BackgroundServices" :key="idx" class="flex items-center justify-between text-sm py-2 border-b last:border-0 border-border/50">
+                      <span>{{ svc.service }}</span>
+                      <span class="text-muted-foreground">Last Run: {{ new Date(svc.lastRun).toLocaleTimeString() }}</span>
+                   </div>
+                   
+                   <div v-if="!healthData.BackgroundServices?.length" class="text-sm text-muted-foreground text-center py-2">
+                      No background services tracked.
+                   </div>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   </div>

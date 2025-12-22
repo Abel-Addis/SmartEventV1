@@ -27,6 +27,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       if (response.success) {
         // Store token and user data
+        console.log("response:", response);
         token.value = response.token;
         user.value = {
           fullName: response.fullName,
@@ -34,6 +35,7 @@ export const useAuthStore = defineStore("auth", () => {
           phoneNumber: response.phoneNumber,
           role: response.role,
           status: response.status,
+          id: response.userId
         };
 
         // Persist to localStorage
@@ -72,6 +74,7 @@ export const useAuthStore = defineStore("auth", () => {
           phoneNumber: response.phoneNumber,
           role: response.role,
           status: response.status,
+          id: response.userId
         };
 
         localStorage.setItem("authToken", response.token);
@@ -107,6 +110,7 @@ export const useAuthStore = defineStore("auth", () => {
           phoneNumber: response.phoneNumber,
           role: response.role,
           status: response.status,
+          id: response.userId
         };
 
         localStorage.setItem("authToken", response.token);

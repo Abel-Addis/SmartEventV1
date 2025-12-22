@@ -247,6 +247,26 @@ export const adminService = {
     return response.data;
   },
 
+  /**
+   * Get credit transactions
+   * @param {Object} filter - { startDate, endDate, transactionType, minAmount, maxAmount }
+   * @param {boolean} exportCsv - If true, returns CSV blob
+   */
+  async getCreditTransactions(filter = {}, exportCsv = false) {
+    const query = new URLSearchParams({
+      ...(filter.startDate && { startDate: filter.startDate }),
+      ...(filter.endDate && { endDate: filter.endDate }),
+      ...(filter.transactionType && { transactionType: filter.transactionType }),
+      ...(filter.minAmount && { minAmount: filter.minAmount }),
+      ...(filter.maxAmount && { maxAmount: filter.maxAmount }),
+      export: exportCsv
+    }).toString();
+
+    const config = exportCsv ? { responseType: 'blob' } : {};
+    const response = await apiClient.get(`/admin/AdminPlatform/get-credit-transactions?${query}`, config);
+    return response.data;
+  },
+
   // --- Recommendation ---
 
   async getRecommendationMetrics() {
@@ -296,4 +316,32 @@ export const adminService = {
     const response = await apiClient.post("/Notification/test");
     return response.data;
   },
+
+  /**
+   * Send broadcast notification to all users
+   * @param {{ title: string, message: string }} payload 
+   */
+  async sendBroadcast(payload) {
+    const response = await apiClient.post("/admin/notifications/broadcast", payload);
+    return response.data;
+  },
+
+  /**
+   * Send notification to specific users
+   * @param {{ userIds: string[], title: string, message: string }} payload 
+   */
+  async sendToUsers(payload) {
+    const response = await apiClient.post("/admin/notifications/users", payload);
+    return response.data;
+  },
+
+  /**
+   * Get users for notification selection
+   * @param {Object} params - { search: string, category: string }
+   */
+  async getUsersForNotification(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const response = await apiClient.get(`/admin/notifications/users?${query}`);
+    return response.data;
+  }
 };

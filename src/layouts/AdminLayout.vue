@@ -30,6 +30,7 @@
         <nav-item to="/admin/events" icon="🎪" label="Events" />
         <nav-item to="/admin/categories" icon="📂" label="Categories" />
         <nav-item to="/admin/reports" icon="📄" label="Reports" />
+        <nav-item to="/admin/notifications" icon="📢" label="Notifications" />
       </nav>
 
       <!-- Profile -->

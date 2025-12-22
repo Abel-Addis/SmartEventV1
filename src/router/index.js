@@ -134,6 +134,11 @@ const routes = [
         component: () => import("../views/organizer/Credits.vue"),
       },
       {
+        path: "boosts",
+        name: "BoostManagement",
+        component: () => import("../views/organizer/BoostManagement.vue"),
+      },
+      {
         path: "notifications",
         name: "OrganizerNotifications",
         component: () => import("../views/organizer/Notifications.vue"),

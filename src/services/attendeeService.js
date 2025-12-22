@@ -17,6 +17,11 @@ export const attendeeService = {
     return result.data;
   },
 
+  async getRecommendations() {
+    const result = await apiClient.get('/recommend/getRecommendationForUser');
+    return result.data;
+  },
+
   async getEventDetails(eventId) {
     const result = await apiClient.get(`/EventBrowsing/detailEvent/${eventId}`);
     return result.data;

@@ -187,6 +187,53 @@
         </div>
       </div>
     </div>
+      
+    <!-- Feedback Section (Only visible if eligible or has review) -->
+    <div v-if="userReview || isEligibleForFeedback" class="mt-8 pt-8 border-t border-border">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-h3 font-bold">Your Review</h3>
+        <button 
+          v-if="isEligibleForFeedback && !userReview"
+          @click="openFeedbackModal"
+          class="btn-primary px-4 py-2"
+        >
+          ★ Give Feedback
+        </button>
+      </div>
+
+      <!-- Existing Review Card -->
+      <div v-if="userReview" class="card bg-muted/30 border-muted">
+         <div class="flex justify-between items-start">
+            <div class="flex gap-4">
+               <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                 {{ userReview.userName?.charAt(0) || 'U' }}
+               </div>
+               <div>
+                 <p class="font-semibold">{{ userReview.userName }}</p>
+                 <div class="flex text-amber-500 text-sm">
+                   <span v-for="n in 5" :key="n">{{ n <= userReview.rating ? '★' : '☆' }}</span>
+                 </div>
+                 <p class="text-sm text-muted-foreground mt-1">{{ new Date(userReview.createdAt).toLocaleDateString() }}</p>
+               </div>
+            </div>
+            <div class="flex gap-2">
+              <button @click="editReview" class="text-sm text-primary hover:underline">Edit</button>
+              <button @click="deleteReview" class="text-sm text-destructive hover:underline">Delete</button>
+            </div>
+         </div>
+         <p class="mt-4 text-foreground/90 whitespace-pre-wrap">{{ userReview.comment }}</p>
+      </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <FeedbackModal
+      :isOpen="showFeedbackModal"
+      :initialRating="userReview?.rating || 0"
+      :initialComment="userReview?.comment || ''"
+      :isEditing="isEditingReview"
+      @close="showFeedbackModal = false"
+      @submit="handleFeedbackSubmit"
+    />
   </div>
 </template>
 
@@ -194,6 +241,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { attendeeService } from '@/services/attendeeService'
+import { feedbackService } from '@/services/feedbackService'
+import FeedbackModal from '@/components/FeedbackModal.vue'
 
 const route = useRoute()
 const eventId = route.params.id
@@ -203,6 +252,12 @@ const loading = ref(true)
 const activeTab = ref('Overview')
 const isFavorite = ref(false)
 const tabs = ['Overview', 'Schedule', 'Location', 'Organizer']
+
+// Feedback State
+const userReview = ref(null)
+const isEligibleForFeedback = ref(false)
+const showFeedbackModal = ref(false)
+const isEditingReview = ref(false)
 
 const formattedDateRange = computed(() => {
   if (!event.value) return ''
@@ -227,10 +282,86 @@ const loadEventDetails = async () => {
   try {
     const data = await attendeeService.getEventDetails(eventId)
     event.value = data
+    
+    // Check feedback status
+    await Promise.all([
+      checkFeedbackStatus(),
+      loadFeedbackSummary()
+    ])
   } catch (err) {
     console.error("Failed to load event details")
   } finally {
     loading.value = false
+  }
+}
+
+const feedbackSummary = ref(null)
+
+const loadFeedbackSummary = async () => {
+  try {
+    const summary = await feedbackService.getEventFeedbackSummary(eventId)
+    feedbackSummary.value = summary
+  } catch (err) {
+    console.error("Failed to load feedback summary", err)
+  }
+}
+
+const checkFeedbackStatus = async () => {
+  try {
+    // 1. Check if user already reviewed
+    const myReview = await feedbackService.getMyFeedbackForEvent(eventId)
+    if (myReview && myReview.feedback) {
+       userReview.value = myReview.feedback // The API returns { ..., feedback: { ... } }
+       isEligibleForFeedback.value = false
+    } else {
+       // 2. If no review, check if eligible
+       const eligibleList = await feedbackService.getEligibleEvents()
+       // Backend returns list of { eventId, title... }
+       const isEligible = eligibleList.find(e => e.eventId === eventId)
+       isEligibleForFeedback.value = !!isEligible
+    }
+  } catch (err) {
+    console.log("Not eligible or not logged in", err)
+  }
+}
+
+const openFeedbackModal = () => {
+  isEditingReview.value = false
+  showFeedbackModal.value = true
+}
+
+const editReview = () => {
+  isEditingReview.value = true
+  showFeedbackModal.value = true
+}
+
+const handleFeedbackSubmit = async (payload) => {
+  try {
+    if (isEditingReview.value) {
+      await feedbackService.updateFeedback(userReview.value.feedbackId, payload)
+    } else {
+      await feedbackService.submitFeedback(eventId, payload)
+    }
+    // Refresh to show updated review
+    await checkFeedbackStatus()
+    showFeedbackModal.value = false
+  } catch (err) {
+    console.error("Failed to submit feedback", err)
+    throw err // Modal handles error display
+  }
+}
+
+const deleteReview = async () => {
+  if(!confirm("Are you sure you want to delete your review?")) return
+  try {
+    await feedbackService.deleteFeedback(userReview.value.feedbackId)
+    userReview.value = null
+    // Check eligibility again (might be eligible to review again? Backend logic decides)
+    // Actually if deleted, and event is still "past", they should be eligible again?
+    // Let's re-check
+    await checkFeedbackStatus()
+  } catch(err) {
+    console.error("Failed to delete review", err)
   }
 }
 

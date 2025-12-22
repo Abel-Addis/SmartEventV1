@@ -1,133 +1,95 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-h2 font-bold mb-2">
-          Notifications
-        </h1>
-        <p class="text-muted-foreground">
-          {{ unreadCount }} unread notifications
-        </p>
+  <div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-h2 font-bold">Notifications</h1>
+      <div class="flex gap-2">
+        <button 
+          v-if="sortedNotifications.some(n => !n.isRead)"
+          @click="markAllRead" 
+          class="text-sm text-primary hover:underline px-3 py-2"
+        >
+          Mark all as read
+        </button>
+        <button @click="loadNotifications" class="btn-outline p-2" title="Refresh">
+          🔄
+        </button>
       </div>
-      <button
-        v-if="unreadCount > 0"
-        class="btn-outline px-6 py-2"
-        @click="markAllRead"
-      >
-        Mark All as Read
-      </button>
     </div>
 
-    <!-- Filter Tabs -->
-    <div class="flex gap-2 border-b border-border overflow-x-auto">
-      <button
-        v-for="filter in filters"
-        :key="filter"
-        :class="['px-4 py-2 font-medium text-sm transition-colors border-b-2 whitespace-nowrap', activeFilter === filter ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']"
-        @click="activeFilter = filter"
-      >
-        {{ filter }}
-      </button>
+    <div v-if="loading" class="text-center py-12 text-muted-foreground">
+      Loading notifications...
     </div>
 
-    <!-- Notifications List -->
-    <div class="space-y-2">
-      <div
-        v-for="notification in filteredNotifications"
-        :key="notification.id"
-        :class="['p-4 border rounded-lg transition-colors cursor-pointer hover:bg-muted', !notification.read ? 'border-primary bg-primary/5' : 'border-border']"
-        @click="toggleRead(notification.id)"
+    <div v-else-if="sortedNotifications.length === 0" class="text-center py-16 bg-muted/30 rounded-lg">
+      <div class="text-4xl mb-4">🔕</div>
+      <p class="text-muted-foreground">You have no notifications yet.</p>
+    </div>
+
+    <div v-else class="space-y-4">
+      <div 
+        v-for="notif in sortedNotifications" 
+        :key="notif.id"
+        :class="[
+          'card transition-all hover:shadow-md border-l-4',
+          notif.isRead ? 'border-l-border bg-background' : 'border-l-primary bg-primary/5'
+        ]"
       >
-        <div class="flex items-start gap-4">
-          <div class="text-2xl mt-1">
-            {{ notification.icon }}
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span v-if="!notif.isRead" class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+              <h3 :class="['font-semibold', notif.isRead ? 'text-foreground/80' : 'text-foreground']">
+                {{ notif.title }}
+              </h3>
+              <span class="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">
+                {{ notif.type }}
+              </span>
+            </div>
+            <p class="text-sm text-foreground/80 leading-relaxed">{{ notif.message }}</p>
+            <p class="text-xs text-muted-foreground mt-2">{{ formatDate(notif.createdAt) }}</p>
           </div>
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold">
-              {{ notification.title }}
-            </p>
-            <p class="text-muted-foreground text-sm mt-1">
-              {{ notification.message }}
-            </p>
-            <p class="text-xs text-muted-foreground mt-2">
-              {{ notification.timestamp }}
-            </p>
-          </div>
-          <div
-            v-if="!notification.read"
-            class="flex-shrink-0 w-2 h-2 bg-primary rounded-full"
-          />
+          
+          <button 
+            v-if="!notif.isRead" 
+            @click="markRead(notif.id)"
+            class="text-xs text-primary hover:underline whitespace-nowrap"
+          >
+            Mark as read
+          </button>
         </div>
       </div>
-    </div>
-
-    <!-- Empty State -->
-    <div
-      v-if="filteredNotifications.length === 0 && !loading"
-      class="card text-center py-12"
-    >
-      <p class="text-3xl mb-2">
-        🔔
-      </p>
-      <h3 class="text-h3 font-bold mb-2">
-        No Notifications
-      </h3>
-      <p class="text-muted-foreground">
-        You're all caught up!
-      </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useNotificationStore } from '@/stores/notification'
 
-const store = useNotificationStore()
-const activeFilter = ref('All')
-const filters = ['All', 'Events', 'Orders', 'System']
+const notificationStore = useNotificationStore()
+const { sortedNotifications, loading } = storeToRefs(notificationStore)
+
+const loadNotifications = async () => {
+    await notificationStore.fetchNotifications()
+}
+
+const markRead = async (id) => {
+    await notificationStore.markAsRead(id)
+}
+
+const markAllRead = async () => {
+    await notificationStore.markAllAsRead()
+}
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    return new Date(dateStr).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    })
+}
 
 onMounted(() => {
-  store.fetchNotifications()
+    loadNotifications()
 })
-
-const unreadCount = computed(() => store.unreadCount)
-const loading = computed(() => store.loading)
-
-// Map store notifications to UI format if needed, or use directly
-const notifications = computed(() => store.sortedNotifications.map(n => ({
-  id: n.id,
-  title: n.title,
-  message: n.message,
-  type: n.type?.toLowerCase() || 'system',
-  timestamp: new Date(n.createdAt).toLocaleString(),
-  read: n.isRead,
-  icon: getIcon(n.type)
-})))
-
-const filteredNotifications = computed(() => {
-  if (activeFilter.value === 'All') return notifications.value
-  return notifications.value.filter(n => n.type === activeFilter.value.toLowerCase())
-})
-
-const toggleRead = (id) => {
-  const n = notifications.value.find(x => x.id === id)
-  if (n && !n.read) {
-    store.markAsRead(id)
-  }
-}
-
-const markAllRead = () => {
-  store.markAllAsRead()
-}
-
-const getIcon = (type) => {
-  switch(type?.toLowerCase()) {
-    case 'event': return '🎉'
-    case 'order': return '✓'
-    case 'promotion': return '🎁'
-    case 'security': return '🔒'
-    default: return '📢'
-  }
-}
 </script>
