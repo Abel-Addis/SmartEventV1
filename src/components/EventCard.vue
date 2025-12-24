@@ -23,6 +23,11 @@
       </div>
       <img v-else :src="image" class="absolute inset-0 w-full h-full object-cover opacity-50" />
       <div class="absolute inset-0 bg-gradient-to-t from-card/70 to-transparent" />
+      
+      <!-- Boost Badge -->
+      <div v-if="boostLevel" class="absolute top-2 right-2 px-2 py-1 bg-amber-500/90 text-white text-[10px] font-bold uppercase tracking-wider rounded-md shadow-lg border border-amber-400/50 backdrop-blur-sm z-20 flex items-center gap-1">
+         <span>🚀</span> {{ boostLevel }}
+      </div>
     </div>
 
     <!-- Content Section -->
@@ -64,7 +69,8 @@ const props = defineProps({
   price: String,
   image: String,
   location: String,
-  category: String
+  category: String,
+  boostLevel: String
 })
 
 const router = useRouter()

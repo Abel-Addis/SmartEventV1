@@ -433,5 +433,10 @@ const getStatusClass = (status) => {
 // Fetch event on mount
 onMounted(() => {
     fetchEventDetails()
+    
+    // Check for tab query param
+    if (route.query.tab === 'feedback') {
+       activeTab.value = 'feedback'
+    }
 })
 </script>

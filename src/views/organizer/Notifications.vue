@@ -71,8 +71,10 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
+import { useRouter } from 'vue-router'
 
 const notificationStore = useNotificationStore()
+const router = useRouter()
 
 // Computed properties from store
 const notifications = computed(() => notificationStore.sortedNotifications)
@@ -118,6 +120,11 @@ const toggleRead = async (id) => {
   const notification = notifications.value.find(n => n.id === id)
   if (notification && !notification.isRead) {
     await notificationStore.markAsRead(id)
+  }
+  
+  // Navigate if referenceKey exists (e.g. for event feedback)
+  if (notification?.referenceKey) {
+     router.push(`/organizer/events/${notification.referenceKey}?tab=feedback`)
   }
 }
 

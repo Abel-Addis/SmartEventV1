@@ -74,10 +74,12 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium mb-2">Location</label>
-          <input v-model="location" type="text" placeholder="Full address" class="input-field w-full"
-            :disabled="loading">
+          <label class="block text-sm font-medium mb-2">Location (Map)</label>
+          <MapLocationPicker v-model="location" />
           <p v-if="errors.location" class="text-xs text-red-600 mt-1">{{ errors.location }}</p>
+          <p class="text-xs text-muted-foreground mt-1">
+            Click on the map to select the event location. Coordinates will be saved automatically.
+          </p>
         </div>
       </div>
 
@@ -224,72 +226,78 @@
         <h3 class="font-semibold">{{ ticket.name }} - ${{ ticket.basePrice }}</h3>
 
         <div v-for="(rule, rIdx) in pricingRules[ticket.id]" :key="rIdx" class="p-4 bg-muted/20 rounded-lg relative">
-            <button v-if="pricingRules[ticket.id].length > 0" type="button" 
-                class="absolute top-2 right-2 text-destructive text-xs hover:underline"
-                @click="removePricingRuleFromTicket(ticket.id, rIdx)">
-                Remove Info
-            </button>
+          <button v-if="pricingRules[ticket.id].length > 0" type="button"
+            class="absolute top-2 right-2 text-destructive text-xs hover:underline"
+            @click="removePricingRuleFromTicket(ticket.id, rIdx)">
+            Remove Info
+          </button>
 
-            <div class="mb-3">
-              <label class="block text-sm font-medium mb-1">Rule Type</label>
-              <select v-model="rule.ruleType" class="input-field w-full">
-                <option value="None">Select Rule Type</option>
-                <option value="EarlyBird">Early Bird Discount</option>
-                <option value="LastMinute">Last Minute Discount</option>
-                <option value="DemandBased">Demand Based Pricing</option>
-              </select>
-            </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">Rule Type</label>
+            <select v-model="rule.ruleType" class="input-field w-full">
+              <option value="None">Select Rule Type</option>
+              <option value="EarlyBird">Early Bird Discount</option>
+              <option value="LastMinute">Last Minute Discount</option>
+              <option value="DemandBased">Demand Based Pricing</option>
+            </select>
+          </div>
 
-            <!-- Early Bird Fields -->
-            <div v-if="rule.ruleType === 'EarlyBird'" class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium mb-2">Start Date *</label>
-                  <input v-model="rule.startDate" type="datetime-local" class="input-field w-full">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-2">End Date *</label>
-                  <input v-model="rule.endDate" type="datetime-local" class="input-field w-full">
-                </div>
+          <!-- Early Bird Fields -->
+          <div v-if="rule.ruleType === 'EarlyBird'" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Start Date *</label>
+                <input v-model="rule.startDate" type="datetime-local" class="input-field w-full">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-2">Discount Percent *</label>
-                <input v-model="rule.discountPercent" type="number" step="0.01" placeholder="e.g., 20" class="input-field w-full">
+                <label class="block text-sm font-medium mb-2">End Date *</label>
+                <input v-model="rule.endDate" type="datetime-local" class="input-field w-full">
               </div>
             </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Discount Percent *</label>
+              <input v-model="rule.discountPercent" type="number" step="0.01" placeholder="e.g., 20"
+                class="input-field w-full">
+            </div>
+          </div>
 
-            <!-- Last Minute Fields -->
-            <div v-if="rule.ruleType === 'LastMinute'" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium mb-2">Last N Days Before Event *</label>
-                <input v-model="rule.lastNDaysBeforeEvent" type="number" placeholder="e.g., 3" class="input-field w-full">
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-2">Discount Percent *</label>
-                <input v-model="rule.discountPercent" type="number" step="0.01" placeholder="e.g., 15" class="input-field w-full">
-              </div>
+          <!-- Last Minute Fields -->
+          <div v-if="rule.ruleType === 'LastMinute'" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Last N Days Before Event *</label>
+              <input v-model="rule.lastNDaysBeforeEvent" type="number" placeholder="e.g., 3" class="input-field w-full">
             </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Discount Percent *</label>
+              <input v-model="rule.discountPercent" type="number" step="0.01" placeholder="e.g., 15"
+                class="input-field w-full">
+            </div>
+          </div>
 
-            <!-- Demand Based Fields -->
-            <div v-if="rule.ruleType === 'DemandBased'" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium mb-2">Threshold Percentage *</label>
-                <input v-model="rule.thresholdPercentage" type="number" placeholder="e.g., 70 (after 70% sold)" class="input-field w-full">
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-2">Price Increase Percent *</label>
-                <input v-model="rule.priceIncreasePercent" type="number" step="0.01" placeholder="e.g., 15" class="input-field w-full">
-              </div>
+          <!-- Demand Based Fields -->
+          <div v-if="rule.ruleType === 'DemandBased'" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Threshold Percentage *</label>
+              <input v-model="rule.thresholdPercentage" type="number" placeholder="e.g., 70 (after 70% sold)"
+                class="input-field w-full">
             </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Price Increase Percent *</label>
+              <input v-model="rule.priceIncreasePercent" type="number" step="0.01" placeholder="e.g., 15"
+                class="input-field w-full">
+            </div>
+          </div>
 
-            <div v-if="rule.ruleType !== 'None'" class="mt-3">
-              <label class="block text-sm font-medium mb-1">Description</label>
-              <textarea v-model="rule.description" rows="2" placeholder="Describe this pricing rule..." class="input-field w-full" />
-            </div>
+          <div v-if="rule.ruleType !== 'None'" class="mt-3">
+            <label class="block text-sm font-medium mb-1">Description</label>
+            <textarea v-model="rule.description" rows="2" placeholder="Describe this pricing rule..."
+              class="input-field w-full" />
+          </div>
         </div>
 
-        <button type="button" class="text-indigo-600 text-sm font-medium hover:underline flex items-center gap-1" @click="addPricingRuleToTicket(ticket.id)">
-            + Add Pricing Rule
+        <button type="button" class="text-indigo-600 text-sm font-medium hover:underline flex items-center gap-1"
+          @click="addPricingRuleToTicket(ticket.id)">
+          + Add Pricing Rule
         </button>
       </div>
 
@@ -333,7 +341,7 @@
           </div>
           <div>
             <p class="text-muted-foreground">Location</p>
-            <p class="font-medium">{{ location || 'Not specified' }}</p>
+            <p class="font-medium">{{ formatLocationForDisplay(location) }}</p>
           </div>
         </div>
 
@@ -348,10 +356,11 @@
               <p class="text-sm text-muted-foreground">{{ ticket.description }}</p>
               <p class="text-xs text-muted-foreground mt-1">Quantity: {{ ticket.quantity }}</p>
 
-              <div v-if="pricingRules[ticket.id] && pricingRules[ticket.id].length > 0" class="mt-2 pt-2 border-t border-border">
+              <div v-if="pricingRules[ticket.id] && pricingRules[ticket.id].length > 0"
+                class="mt-2 pt-2 border-t border-border">
                 <div v-for="(rule, rIdx) in pricingRules[ticket.id]" :key="rIdx" class="mb-2">
-                    <p v-if="rule.ruleType !== 'None'" class="text-xs font-medium">Rule: {{ rule.ruleType }}</p>
-                    <p v-if="rule.ruleType !== 'None'" class="text-xs text-muted-foreground">{{ rule.description }}</p>
+                  <p v-if="rule.ruleType !== 'None'" class="text-xs font-medium">Rule: {{ rule.ruleType }}</p>
+                  <p v-if="rule.ruleType !== 'None'" class="text-xs text-muted-foreground">{{ rule.description }}</p>
                 </div>
               </div>
             </div>
@@ -382,6 +391,8 @@ import { useForm, useField } from 'vee-validate'
 import { eventSchema } from '../../validation/eventSchema'
 import { useEventStore } from '../../stores/event'
 import { categoryService } from '../../services/categoryService'
+import MapLocationPicker from '../../components/MapLocationPicker.vue'
+import { compressImage, compressImages } from '../../utils/imageCompression'
 
 const router = useRouter()
 const eventStore = useEventStore()
@@ -447,30 +458,73 @@ onMounted(async () => {
 })
 
 // File handlers
-const handleCoverImageChange = (event) => {
+const handleCoverImageChange = async (event) => {
   const file = event.target.files[0]
   if (file) {
-    setFieldValue('coverImage', file)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      coverImagePreview.value = e.target.result
+    try {
+      // Compress the image
+      const compressedFile = await compressImage(file, {
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 0.85
+      })
+
+      setFieldValue('coverImage', compressedFile)
+
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        coverImagePreview.value = e.target.result
+      }
+      reader.readAsDataURL(compressedFile)
+    } catch (error) {
+      console.error('Failed to compress image:', error)
+      // Fallback to original file if compression fails
+      setFieldValue('coverImage', file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        coverImagePreview.value = e.target.result
+      }
+      reader.readAsDataURL(file)
     }
-    reader.readAsDataURL(file)
   }
 }
 
-const handleAdditionalImagesChange = (event) => {
+const handleAdditionalImagesChange = async (event) => {
   const files = Array.from(event.target.files)
-  additionalImages.value = files
 
-  additionalImagesPreview.value = []
-  files.forEach(file => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      additionalImagesPreview.value.push(e.target.result)
-    }
-    reader.readAsDataURL(file)
-  })
+  try {
+    // Compress all images
+    const compressedFiles = await compressImages(files, {
+      maxWidth: 1920,
+      maxHeight: 1080,
+      quality: 0.85
+    })
+
+    additionalImages.value = compressedFiles
+
+    // Create previews
+    additionalImagesPreview.value = []
+    compressedFiles.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        additionalImagesPreview.value.push(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    })
+  } catch (error) {
+    console.error('Failed to compress images:', error)
+    // Fallback to original files if compression fails
+    additionalImages.value = files
+    additionalImagesPreview.value = []
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        additionalImagesPreview.value.push(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    })
+  }
 }
 
 // Ticket management
@@ -578,21 +632,21 @@ const saveTickets = async () => {
 
 // Pricing Rule Management
 const addPricingRuleToTicket = (ticketId) => {
-    if (!pricingRules.value[ticketId]) pricingRules.value[ticketId] = []
-    pricingRules.value[ticketId].push({
-        ruleType: 'None',
-        description: '',
-        startDate: '',
-        endDate: '',
-        discountPercent: 0,
-        lastNDaysBeforeEvent: 0,
-        thresholdPercentage: 0,
-        priceIncreasePercent: 0
-    })
+  if (!pricingRules.value[ticketId]) pricingRules.value[ticketId] = []
+  pricingRules.value[ticketId].push({
+    ruleType: 'None',
+    description: '',
+    startDate: '',
+    endDate: '',
+    discountPercent: 0,
+    lastNDaysBeforeEvent: 0,
+    thresholdPercentage: 0,
+    priceIncreasePercent: 0
+  })
 }
 
 const removePricingRuleFromTicket = (ticketId, index) => {
-    pricingRules.value[ticketId].splice(index, 1)
+  pricingRules.value[ticketId].splice(index, 1)
 }
 
 // Step 3: Save pricing rules
@@ -603,32 +657,32 @@ const savePricingRules = async () => {
   try {
     const rulePromises = []
     console.log("pricingRules.value", pricingRules.value);
-    
+
     // Iterate over tickets
     for (const ticketId in pricingRules.value) {
       const rules = pricingRules.value[ticketId]
-      
+
       // Iterate over rules for this ticket
       for (const rule of rules) {
         if (rule.ruleType !== 'None') {
-            const ruleData = {
+          const ruleData = {
             RuleType: rule.ruleType,
             Description: rule.description
-            }
+          }
 
-            if (rule.ruleType === 'EarlyBird') {
+          if (rule.ruleType === 'EarlyBird') {
             ruleData.StartDate = new Date(rule.startDate).toISOString()
             ruleData.EndDate = new Date(rule.endDate).toISOString()
             ruleData.DiscountPercent = parseFloat(rule.discountPercent)
-            } else if (rule.ruleType === 'LastMinute') {
+          } else if (rule.ruleType === 'LastMinute') {
             ruleData.LastNDaysBeforeEvent = parseInt(rule.lastNDaysBeforeEvent)
             ruleData.DiscountPercent = parseFloat(rule.discountPercent)
-            } else if (rule.ruleType === 'DemandBased') {
+          } else if (rule.ruleType === 'DemandBased') {
             ruleData.ThresholdPercentage = parseInt(rule.thresholdPercentage)
             ruleData.PriceIncreasePercent = parseFloat(rule.priceIncreasePercent)
-            }
+          }
 
-            rulePromises.push(eventStore.addPricingRule(ticketId, ruleData))
+          rulePromises.push(eventStore.addPricingRule(ticketId, ruleData))
         }
       }
     }
@@ -665,6 +719,16 @@ const publishNow = async () => {
 const saveAsDraft = () => {
   // Event is already saved as draft, just redirect
   router.push('/organizer/events')
+}
+
+// Helper to format location for display
+const formatLocationForDisplay = (loc) => {
+  if (!loc) return 'Not specified'
+  const parts = loc.split('|')
+  if (parts.length === 2) {
+    return `Lat: ${parseFloat(parts[0]).toFixed(4)}, Lng: ${parseFloat(parts[1]).toFixed(4)}`
+  }
+  return loc
 }
 
 // Computed

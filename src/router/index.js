@@ -197,6 +197,18 @@ const routes = [
       },
     ],
   },
+  {
+    path: "/scanner",
+    name: "GatePersonLayout",
+    component: () => import("../layouts/GatePersonLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "GatePersonDashboard",
+        component: () => import("../views/gateperson/Dashboard.vue"),
+      },
+    ],
+  },
 ];
 
 const router = createRouter({

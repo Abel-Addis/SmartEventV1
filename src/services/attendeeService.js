@@ -81,4 +81,13 @@ export const attendeeService = {
     const result = await apiClient.post(`/Payment/callback`, { tx_ref: txRef });
     return result.data;
   },
+
+  // --- Location Tracking ---
+
+  async trackLocation(location) {
+    const result = await apiClient.post(`/track/location`, {
+      UserLocation: location,
+    });
+    return result.data;
+  },
 };

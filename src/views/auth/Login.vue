@@ -37,7 +37,10 @@ const handleLogin = async () => {
         router.push('/organizer')
       } else if (role === 'Attendee') {
         router.push('/dashboard')
-      } else {
+      } else if (role === 'GatePerson') {
+        router.push('/scanner')
+      }
+      else {
         router.push('/')
       }
     } else {

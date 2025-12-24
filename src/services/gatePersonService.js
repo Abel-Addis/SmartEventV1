@@ -55,4 +55,36 @@ export const gatePersonService = {
     const response = await apiClient.get("/gatepersons/get-assignment-events");
     return response.data;
   },
+
+  /**
+   * Scan a ticket QR code
+   * @param {Object} scanData - { qrCode, deviceId?, location? }
+   * @returns {Promise<Object>} Scan result with validation status
+   */
+  async scanTicket(scanData) {
+    const response = await apiClient.post('/ticket-scan/scanTicketQr', {
+      QrCode: scanData.qrCode,
+      DeviceId: scanData.deviceId || null,
+      Location: scanData.location || null
+    })
+    return response.data
+  },
+
+  /**
+   * Get recent scans for the logged-in gate person
+   * @returns {Promise<Array>} List of recent scan history
+   */
+  async getRecentScans() {
+    const response = await apiClient.get('/ticket-scan/gatePerson/recent-scans')
+    return response.data
+  },
+
+  /**
+   * Get gate person dashboard information
+   * @returns {Promise<Object>} Dashboard data with assigned events
+   */
+  async getDashboardInfo() {
+    const response = await apiClient.get('/gatepersons/gate-person-Information')
+    return response.data
+  }
 };
